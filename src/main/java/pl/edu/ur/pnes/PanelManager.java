@@ -17,4 +17,28 @@ public class PanelManager {
             e.printStackTrace();
         }
     }
+
+    public static void addLeftPanel(CustomPanel panelClass) {
+        addLeftPanel(panelClass, panelClass.getClass().getSimpleName());
+    }
+
+    public static void addLeftPanel(CustomPanel panelClass, String tabName) {
+        try {
+            MainApp.mainController.leftTabPane.addTab(tabName, panelClass.loadPanel());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void addRightPanel(CustomPanel panelClass) {
+        addRightPanel(panelClass, panelClass.getClass().getSimpleName());
+    }
+
+    public static void addRightPanel(CustomPanel panelClass, String tabName) {
+        try {
+            MainApp.mainController.rightTabPane.addTab(tabName, panelClass.loadPanel());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

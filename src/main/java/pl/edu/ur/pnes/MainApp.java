@@ -1,14 +1,14 @@
 package pl.edu.ur.pnes;
 
-import com.panemu.tiwulfx.control.dock.DetachableTab;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import pl.edu.ur.pnes.panels.CenterPanel;
+import pl.edu.ur.pnes.panels.ProjectTreePanel;
+import pl.edu.ur.pnes.panels.PropertiesPanel;
 
 import java.io.IOException;
 
@@ -34,11 +34,13 @@ public class MainApp extends Application {
 //        controller.leftTabPane.setOnClosedPassSibling((sibling) -> controller.leftTabPane = sibling);
 
         PanelManager.addCenterPanel(new CenterPanel());
+        PanelManager.addRightPanel(new PropertiesPanel());
+        PanelManager.addLeftPanel(new ProjectTreePanel());
 
         // example tab adding
-        DetachableTab tab1 = new DetachableTab("Test Innej", new Button("Hello"));
-        tab1.setClosable(false);
-        controller.leftTabPane.getTabs().add(tab1);
+//        DetachableTab tab1 = new DetachableTab("Test Innej", new Button("Hello"));
+//        tab1.setClosable(false);
+//        controller.leftTabPane.getTabs().add(tab1);
     }
 
 
