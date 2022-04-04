@@ -24,12 +24,7 @@ public class MainController {
     public DetachableTabPane centerTabPane;
     @FXML
     public DetachableTabPane rightTabPane;
-    @FXML
-    public HBox centerToolbarRight;
-    @FXML
-    public HBox centerToolbarLeft;
-    @FXML
-    public HBox centerToolbar;
+
     @FXML
     public HBox mainToolbarRight;
     @FXML

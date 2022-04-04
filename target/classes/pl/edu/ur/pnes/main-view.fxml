@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.panemu.tiwulfx.control.dock.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.edu.ur.pnes.MainController">
+<?import com.panemu.tiwulfx.control.dock.DetachableTabPane?>
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.edu.ur.pnes.MainController">
    <top>
       <VBox BorderPane.alignment="CENTER">
          <children>
@@ -64,27 +71,6 @@
              </SplitPane>
             <VBox>
                <children>
-                  <HBox fx:id="centerToolbar" spacing="5.0">
-                     <children>
-                        <HBox fx:id="centerToolbarLeft" spacing="5.0">
-                           <children>
-                              <Button mnemonicParsing="false" text="Button" />
-                              <Button mnemonicParsing="false" text="Button" />
-                              <Button mnemonicParsing="false" text="Button" />
-                           </children>
-                        </HBox>
-                        <Pane prefHeight="1.0" prefWidth="100.0" HBox.hgrow="ALWAYS" />
-                        <HBox fx:id="centerToolbarRight" spacing="5.0">
-                           <children>
-                              <Button mnemonicParsing="false" text="Button" />
-                              <Button mnemonicParsing="false" text="Button" />
-                           </children>
-                        </HBox>
-                     </children>
-                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </HBox>
                    <SplitPane VBox.vgrow="ALWAYS">
                        <DetachableTabPane fx:id="centerTabPane" tabClosingPolicy="ALL_TABS" />
                    </SplitPane>
