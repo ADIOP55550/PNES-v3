@@ -5,8 +5,9 @@ module pl.edu.ur.pnes {
     requires javafx.graphics;
     requires tiwulfx.dock;
     requires org.jfxtras.styles.jmetro;
-    requires gs.core;
     requires gs.ui.javafx;
+//    requires gs.algo;
+    requires gs.core;
 
 
     opens pl.edu.ur.pnes to javafx.fxml;
