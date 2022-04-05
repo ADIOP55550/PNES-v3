@@ -1,8 +1,11 @@
 package pl.edu.ur.pnes;
 
 import javafx.application.Application;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
@@ -17,6 +20,7 @@ public class MainApp extends Application {
     public static JMetro mainJMetro = new JMetro(Style.DARK); // Default app style
     public static Stage mainStage;
 
+
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("main-view.fxml"));
@@ -27,6 +31,9 @@ public class MainApp extends Application {
         stage.setScene(scene);
         stage.show();
         mainStage = stage;
+
+
+
 
         MainController controller = fxmlLoader.getController();
         mainController = controller;
