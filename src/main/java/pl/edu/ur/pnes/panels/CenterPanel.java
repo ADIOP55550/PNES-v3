@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import org.graphstream.graph.Graph;
@@ -27,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CenterPanel extends CustomPanel {
     public static BooleanProperty ctrlPressed = new SimpleBooleanProperty(false);
-
+    public static BooleanProperty scrollPressed = new SimpleBooleanProperty(false);
     @FXML
     public HBox centerToolbarRight;
     @FXML
@@ -39,6 +40,8 @@ public class CenterPanel extends CustomPanel {
 
     MouseEvent last;
     private Camera camera;
+    private double prevY = 0; //temp
+    private double prevX = 0; //temp
 
     public void processDrag(MouseEvent event) {
         if (last != null) {
@@ -126,9 +129,9 @@ public class CenterPanel extends CustomPanel {
             }
         };
 
-
+        FxGraphRenderer renderer = new FxGraphRenderer();
         FxViewer viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
-        FxViewPanel view = (FxViewPanel) viewer.addView(FxViewer.DEFAULT_VIEW_ID, new FxGraphRenderer());
+        FxViewPanel view = (FxViewPanel) viewer.addView(FxViewer.DEFAULT_VIEW_ID, renderer);
         this.camera = view.getCamera();
 
 
@@ -169,6 +172,27 @@ public class CenterPanel extends CustomPanel {
             cam.setViewCenter(x, y, 0);
         });
 
+        double moveSpeed = 25 ;
+        ((Node) view).setOnMouseDragged(e -> {
+            if (!ctrlPressed.getValue() && e.getButton() != MouseButton.MIDDLE) return;
+            e.consume();
+            renderer.endSelectionAt(e.getX(), e.getY());;
+            Point3 viewCenter = camera.getViewCenter();
+            if ((int) e.getY() != (int) prevY)
+                if (e.getY() > prevY) {
+                    camera.setViewCenter(viewCenter.x, viewCenter.y + moveSpeed * zoomFactor.doubleValue(), 0);
+                }
+                else camera.setViewCenter(viewCenter.x, viewCenter.y - moveSpeed * zoomFactor.doubleValue(), 0);
+            if ((int) e.getX() != (int) prevX)
+                if (e.getX() > prevX) {
+                    camera.setViewCenter(viewCenter.x - moveSpeed * zoomFactor.doubleValue(), viewCenter.y, 0);
+                }
+                else camera.setViewCenter(viewCenter.x + moveSpeed * zoomFactor.doubleValue(), viewCenter.y, 0);
+
+            prevX = e.getX();
+            prevY = e.getY();
+
+        });
 
         graphPane.getChildren().add((Node) view);
     }
