@@ -56,27 +56,11 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>org.graphstream</groupId>
-            <artifactId>gs-core</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.graphstream</groupId>
-            <artifactId>gs-ui-javafx</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.graphstream/gs-algo -->
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/com.brunomnsilva/JavaFXSmartGraph &ndash;&gt;-->
 <!--        <dependency>-->
-<!--            <groupId>org.graphstream</groupId>-->
-<!--            <artifactId>gs-algo</artifactId>-->
-<!--            <version>2.0</version>-->
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <artifactId>gs-ui</artifactId>-->
-<!--                    <groupId>org.graphstream</groupId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
+<!--            <groupId>com.brunomnsilva</groupId>-->
+<!--            <artifactId>JavaFXSmartGraph</artifactId>-->
+<!--            <version>0.9.4</version>-->
 <!--        </dependency>-->
 
 

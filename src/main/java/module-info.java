@@ -5,10 +5,7 @@ module pl.edu.ur.pnes {
     requires javafx.graphics;
     requires tiwulfx.dock;
     requires org.jfxtras.styles.jmetro;
-    requires gs.ui.javafx;
-//    requires gs.algo;
-    requires gs.core;
-
+    requires JavaFXSmartGraph;
 
     opens pl.edu.ur.pnes to javafx.fxml;
     exports pl.edu.ur.pnes;

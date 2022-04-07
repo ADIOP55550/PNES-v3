@@ -4,9 +4,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox prefHeight="200.0" prefWidth="178.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.edu.ur.pnes.panels.CenterPanel">
-    <children>
-        <HBox fx:id="centerToolbar" spacing="5.0">
+<VBox xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.edu.ur.pnes.panels.CenterPanel">
+   <children>
+        <HBox fx:id="centerToolbar" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0">
             <children>
                 <HBox fx:id="centerToolbarLeft" spacing="5.0">
                     <children>
@@ -27,10 +27,10 @@
                 <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
             </padding>
         </HBox>
-        <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
+        <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
             <children>
-                <Pane fx:id="graphPane" HBox.hgrow="ALWAYS" />
+                <Pane fx:id="graphPane" prefHeight="380.0" prefWidth="415.0" HBox.hgrow="ALWAYS" />
             </children>
         </HBox>
-    </children>
+   </children>
 </VBox>
