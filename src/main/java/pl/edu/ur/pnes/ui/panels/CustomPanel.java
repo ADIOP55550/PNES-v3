@@ -1,4 +1,4 @@
-package pl.edu.ur.pnes.panels;
+package pl.edu.ur.pnes.ui.panels;
 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox prefHeight="200.0" prefWidth="178.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.edu.ur.pnes.panels.CenterPanel">
+<VBox prefHeight="200.0" prefWidth="178.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.edu.ur.pnes.ui.panels.CenterPanel">
     <children>
         <HBox fx:id="centerToolbar" spacing="5.0">
             <children>
