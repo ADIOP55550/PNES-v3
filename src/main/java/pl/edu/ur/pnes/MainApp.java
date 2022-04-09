@@ -1,19 +1,18 @@
 package pl.edu.ur.pnes;
 
 import javafx.application.Application;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
-import pl.edu.ur.pnes.panels.CenterPanel;
-import pl.edu.ur.pnes.panels.ProjectTreePanel;
-import pl.edu.ur.pnes.panels.PropertiesPanel;
+import pl.edu.ur.pnes.ui.PanelManager;
+import pl.edu.ur.pnes.ui.panels.CenterPanel;
+import pl.edu.ur.pnes.ui.panels.ProjectTreePanel;
+import pl.edu.ur.pnes.ui.panels.PropertiesPanel;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class MainApp extends Application {
     public static MainController mainController;
@@ -23,6 +22,9 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        System.setProperty("log4j2.configurationFile", Objects.requireNonNull(MainApp.class.getResource("/log4j2.properties")).getPath());
+
+
         FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("main-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 320 * 3, 240 * 3);
         stage.setTitle("PNES");
@@ -32,22 +34,11 @@ public class MainApp extends Application {
         stage.show();
         mainStage = stage;
 
-
-
-
-        MainController controller = fxmlLoader.getController();
-        mainController = controller;
-
-//        controller.leftTabPane.setOnClosedPassSibling((sibling) -> controller.leftTabPane = sibling);
+        mainController = fxmlLoader.getController();
 
         PanelManager.addCenterPanel(new CenterPanel());
         PanelManager.addRightPanel(new PropertiesPanel());
         PanelManager.addLeftPanel(new ProjectTreePanel());
-
-        // example tab adding
-//        DetachableTab tab1 = new DetachableTab("Test Innej", new Button("Hello"));
-//        tab1.setClosable(false);
-//        controller.leftTabPane.getTabs().add(tab1);
     }
 
 

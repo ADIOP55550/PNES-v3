@@ -8,11 +8,14 @@ module pl.edu.ur.pnes {
     requires gs.ui.javafx;
 //    requires gs.algo;
     requires gs.core;
+    requires org.apache.logging.log4j;
 
 
     opens pl.edu.ur.pnes to javafx.fxml;
     exports pl.edu.ur.pnes;
-    exports pl.edu.ur.pnes.panels;
+    exports pl.edu.ur.pnes.ui.panels;
+    exports pl.edu.ur.pnes.ui;
+    opens pl.edu.ur.pnes.ui to javafx.fxml;
 
 //    exports com.sun.javafx.logging;
 }
