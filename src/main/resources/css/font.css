@@ -1,0 +1,20 @@
+@font-face {
+    src: url("Font/pnesfont.ttf");
+}
+
+.root{
+    /*-fx-font: 20px "FreeMono" !important;*/
+    -fx-font-family: pnesfont !important;
+    /*-fx-background-color: #ff0000 ;*/
+}
+
+Icon{
+    -fx-font-family: pnesfont !important;
+}
+
+.icon{
+    -fx-font-family: pnesfont !important;
+}
+
+
+
