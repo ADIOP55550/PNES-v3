@@ -1,6 +1,9 @@
 package pl.edu.ur.pnes.petriNet.simulator;
 
-import pl.edu.ur.pnes.petriNet.Net;
+import pl.edu.ur.pnes.petriNet.Transition;
+
+import java.util.Random;
+import java.util.stream.Stream;
 
 public class SimulatorFacade {
 
@@ -10,9 +13,21 @@ public class SimulatorFacade {
         this.simulator = simulator;
     }
 
-    public void simulateNet(Net net) {
-        //this.simulator.///
-        throw new UnsupportedOperationException("Not implemented yet");
+
+    public void automaticStep() {
+        var r = new Random();
+        var transitionsThatCanBeActivated = getTransitionsThatCanBeActivated();
+
     }
+
+    private Stream<Transition> getTransitionsThatCanBeActivated() {
+        return simulator.net.getTransitions().stream()
+                .filter(t -> simulator.net.activationRule.test(t));
+    }
+
+    public void manualStep(Transition transitionToBeActivated) {
+
+    }
+
 
 }

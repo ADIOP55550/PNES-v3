@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class Place extends Node {
     private static int placeCounter = 0;
-    protected double tokens = 0;
+    private double tokens = 0;
 
     /**
      * inputs is a HashMap containing all the Place's input connections in form
@@ -36,5 +36,13 @@ public class Place extends Node {
     @Override
     public List<String> getClasses() {
         return List.of("place");
+    }
+
+    double getTokens() {
+        return tokens;
+    }
+
+    void setTokens(double tokens) {
+        this.tokens = tokens;
     }
 }
