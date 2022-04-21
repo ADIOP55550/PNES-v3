@@ -18,6 +18,7 @@ public class MainApp extends Application {
     public static MainController mainController;
     public static JMetro mainJMetro = new JMetro(Style.DARK); // Default app style
     public static Stage mainStage;
+    public static CenterPanel centerPanel;
 
 
     @Override
@@ -36,7 +37,9 @@ public class MainApp extends Application {
 
         mainController = fxmlLoader.getController();
 
-        PanelManager.addCenterPanel(new CenterPanel());
+        MainApp.centerPanel = new CenterPanel();
+
+        PanelManager.addCenterPanel(centerPanel);
         PanelManager.addRightPanel(new PropertiesPanel());
         PanelManager.addLeftPanel(new ProjectTreePanel());
     }
