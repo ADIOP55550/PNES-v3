@@ -3,10 +3,8 @@ package pl.edu.ur.pnes.petriNet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
 
 public class Transition extends Node {
-    public BooleanSupplier canActivate;
     private static int transitionCounter = 0;
 
 
@@ -33,10 +31,6 @@ public class Transition extends Node {
         this.setId(newId);
     }
 
-    public Transition(Net net, BooleanSupplier canActivate) {
-        this(net);
-        this.canActivate = canActivate;
-    }
 
     @Override
     public List<String> getClasses() {

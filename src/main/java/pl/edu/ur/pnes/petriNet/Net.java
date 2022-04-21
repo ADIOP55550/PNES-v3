@@ -17,6 +17,8 @@ public abstract class Net {
         return this.usedIds.contains(newId);
     }
 
+    public Rules activationRule = Rules.R1;
+
     List<Arc> arcs = new ArrayList<>();
     List<Place> places = new ArrayList<>();
     List<Transition> transitions = new ArrayList<>();

@@ -10,7 +10,7 @@ import java.util.function.BiPredicate;
  */
 public class Arc extends NetElement {
     private static int placeCounter = 0;
-    public double weight = 0;
+    private double weight = 0;
 
     public final List<ArcPart> parts = new ArrayList<>();
 
@@ -38,5 +38,13 @@ public class Arc extends NetElement {
         // increment ids until free one is found
         while (net.isIdUsed(newId));
         this.setId(newId);
+    }
+
+    double getWeight() {
+        return weight;
+    }
+
+    void setWeight(double weight) {
+        this.weight = weight;
     }
 }

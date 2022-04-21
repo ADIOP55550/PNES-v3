@@ -16,6 +16,7 @@ module pl.edu.ur.pnes {
     exports pl.edu.ur.pnes.ui.panels;
     exports pl.edu.ur.pnes.ui;
     opens pl.edu.ur.pnes.ui to javafx.fxml;
+    exports pl.edu.ur.pnes.petriNet;
 
 //    exports com.sun.javafx.logging;
 }
