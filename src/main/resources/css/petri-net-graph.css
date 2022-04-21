@@ -1,5 +1,55 @@
+edge {
+    arrow-size: 0.35gu, 0.18gu;
+}
+
+edge:selected {
+    fill-color: cyan;
+    size: 3px;
+}
+
 node {
-    shape: box;
+    shape: triangle;
+    fill-color: red;
+    stroke-color: black;
+}
+
+sprite.label {
+    text-background-mode: none;
+    text-size: 20gu;
+    fill-mode: none;
+    text-visibility-mode: under-zoom;
+    text-visibility: 1;
+}
+
+node.place {
+    shape: circle;
     fill-color: blue;
     stroke-color: black;
+}
+
+node.transition {
+    shape: box;
+    fill-color: lightblue;
+}
+
+node.activated {
+    stroke-color: red;
+    stroke-width: 0.3gu;
+}
+
+node.ready {
+    fill-color: lightgreen;
+}
+
+node.active {
+    fill-color: orange;
+}
+
+node:selected {
+    stroke-mode: plain;
+    stroke-color: red;
+}
+
+node:clicked {
+    fill-color: green;
 }

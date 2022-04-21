@@ -4,7 +4,9 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import org.apache.logging.log4j.LogManager;
@@ -15,8 +17,13 @@ import org.graphstream.ui.fx_viewer.FxViewPanel;
 import org.graphstream.ui.fx_viewer.FxViewer;
 import org.graphstream.ui.geom.Point2;
 import org.graphstream.ui.geom.Point3;
+import org.graphstream.ui.graphicGraph.stylesheet.StyleConstants;
 import org.graphstream.ui.javafx.FxGraphRenderer;
+import org.graphstream.ui.spriteManager.Sprite;
+import org.graphstream.ui.spriteManager.SpriteManager;
 import org.graphstream.ui.view.camera.Camera;
+import pl.edu.ur.pnes.petriNet.Net;
+import pl.edu.ur.pnes.petriNet.Place;
 
 import java.util.Random;
 
@@ -24,10 +31,12 @@ import java.util.Random;
 class Visualizer {
     // Zoom factor is 'reversed' -> smaller number = bigger zoom
     static final int MIN_ZOOM = 20;
-    static final double MAX_ZOOM = 0.1;
-    public static final int RECT_WIDTH_BASE = 9;
-    public static final int RECT_HEIGHT_BASE = 6;
-    static double BASE_MOVE_SPEED = 8.5;
+    static final double MAX_ZOOM = 0.08;
+    static final int RECT_WIDTH_BASE = 18;
+    static final int RECT_HEIGHT_BASE = 12;
+    static final int ARROW_WIDTH_BASE = 9;
+    static final int ARROW_HEIGHT_BASE = 4;
+    static double BASE_MOVE_SPEED = 0.2;
     final DoubleProperty zoomFactor = new SimpleDoubleProperty(1) {
         @Override
         public void set(double v) {
@@ -42,17 +51,14 @@ class Visualizer {
     private final FxViewer viewer;
     private final FxViewPanel view;
     private final Graph graph;
+    SpriteManager spriteManager;
     private final FxGraphRenderer renderer;
-    private final DoubleProperty moveSpeed = new SimpleDoubleProperty();
+    private double moveSpeed = BASE_MOVE_SPEED * zoomFactor.doubleValue();
     private Point3 dragStart;
     private Point3 originalViewCenter;
 
-    Point2 getRectangleSize(double zoomFactor) {
-        double zoomrsqrt = 1/Math.sqrt(zoomFactor);
-        return new Point2(
-                RECT_WIDTH_BASE * zoomrsqrt,
-                RECT_HEIGHT_BASE * zoomrsqrt
-        );
+    double getSizeScaleFactor(double zoomFactor) {
+        return (1 / Math.sqrt(zoomFactor)) * 2;
     }
 
     static {
@@ -72,15 +78,28 @@ class Visualizer {
     Visualizer() {
         System.out.println("System.getProperty(\"log4j2.configurationFile\") = " + System.getProperty("log4j2.configurationFile"));
         this.graph = new DefaultGraph("Graph 1");
+        this.spriteManager = new SpriteManager(graph);
         this.renderer = new FxGraphRenderer();
         this.viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
         this.view = (FxViewPanel) viewer.addView(FxViewer.DEFAULT_VIEW_ID, renderer);
 
+        view.getCamera().setGraphViewport(0, 0, 100, 100);
+
         view.getCamera().setViewPercent(1);
-        moveSpeed.bind(zoomFactor.multiply(BASE_MOVE_SPEED));
+//        moveSpeed.bind(zoomFactor.multiply(BASE_MOVE_SPEED));
 
+//        generateTestNodes(40);
 
-//      #region test nodes
+        autoLayout.addListener(this::onAutoLayoutPropertyChanged);
+        zoomFactor.addListener(this::onCanvasZoom);
+        view.setOnScroll(this::handleScroll);
+        view.setOnMousePressed(this::onCanvasMousePressed);
+        view.setOnMouseDragged(this::onCanvasMouseDragged);
+        setupGraph();
+    }
+
+    private void generateTestNodes(int node_count) {
+        Random r = new Random();
         logger.debug("adding test nodes...");
 
         graph.addNode("A");
@@ -88,77 +107,42 @@ class Visualizer {
         graph.addNode("C");
         graph.addNode("D");
         graph.addNode("E");
-
-        Random r = new Random();
-        final int NODE_COUNT = 800;
-        for (int i = 0; i < NODE_COUNT; i++) {
-            graph.addNode("a" + i);
-        }
-        for (int i = 0; i < NODE_COUNT; i++) {
-            int a1 = r.nextInt(NODE_COUNT);
-            int a2 = r.nextInt(NODE_COUNT);
-            try {
-                graph.addEdge("a" + a1 + "-" + a2, "a" + a1, "a" + a2);
-            } catch (Exception ignored) {
-            }
-        }
-
         graph.addNode("F");
-        graph.addEdge("AB", "A", "B");
-        graph.addEdge("EF", "E", "F");
-        graph.addEdge("AD", "A", "D");
-        graph.addEdge("BC", "B", "C");
-        graph.addEdge("CA", "C", "A");
-//      #endregion test nodes
+
+        for (int i = 0; i < node_count; i++) {
+            graph.addNode("a" + i);
+            graph.getNode("a" + i).setAttribute("xy", r.nextInt(20000) - 10000, r.nextInt(20000) - 10000);
+        }
+        for (int i = 1; i < node_count; i++) {
+            graph.addEdge("a" + (i - 1) + "-" + i, "a" + (i - 1), "a" + i, true);
 
 
-        autoLayout.addListener((observableValue, oldVal, newVal) -> {
-            if (newVal)
-                viewer.enableAutoLayout();
-            else
-                viewer.disableAutoLayout();
-        });
+//            int a1 = r.nextInt(node_count);
+//            int a2 = r.nextInt(node_count);
+//            try {
+//                graph.addEdge("a" + a1 + "-" + a2, "a" + a1, "a" + a2);
+//            } catch (Exception ignored) {
+//            }
+        }
 
-        zoomFactor.addListener((observableValue, oldVal, newVal) -> {
-            Camera cam = view.getCamera();
-            if (newVal.doubleValue() == cam.getViewPercent())
-                return;
-            cam.setViewPercent(newVal.doubleValue());
-            Point2 rectSize = getRectangleSize(newVal.doubleValue());
-            graph.nodes().forEach(node -> {
-                node.setAttribute("ui.style", "size: " + rectSize.x + "px, " + rectSize.y + "px;");
-            });
-        });
+        graph.addEdge("AB", "A", "B", true);
+        graph.addEdge("EF", "E", "F", true);
+        graph.addEdge("AD", "A", "D", true);
+        graph.addEdge("BC", "B", "C", true);
+        graph.addEdge("CA", "C", "A", true);
+    }
 
-        view.setOnScroll(this::handleScroll);
+    private void setupGraph() {
+        double scaleFactor = getSizeScaleFactor(zoomFactor.doubleValue());
+        final double sizeX = scaleFactor * RECT_WIDTH_BASE;
+        final double sizeY = scaleFactor * RECT_HEIGHT_BASE;
 
-        Point2 rectSize = getRectangleSize(zoomFactor.doubleValue());
-        graph.nodes().forEach(node -> {
-            node.setAttribute("xy", r.nextInt(5800) - 400, r.nextInt(5800) - 400);
-//            initial rect size
-//            node.setAttribute("ui.style", "size: 50px, 30px;");
-            node.setAttribute("ui.style", "size: " + rectSize.x + "px, " + rectSize.y + "px;");
-        });
+        view.enableMouseOptions();
+//        equal to:
+//        viewer.getDefaultView().setMouseManager(new MouseOverMouseManager(EnumSet.of(InteractiveElement.EDGE, InteractiveElement.NODE, InteractiveElement.SPRITE)));
 
-        view.setOnMousePressed(mouseEvent -> {
-            this.dragStart = new Point3(mouseEvent.getScreenX(), mouseEvent.getScreenY());
-            this.originalViewCenter = new Point3(view.getCamera().getViewCenter());
-        });
 
-        view.setOnMouseDragged(e -> {
-//            only move if button is middle mouse button or ctrl is pressed
-            if (!e.isControlDown() && e.getButton() != MouseButton.MIDDLE) return;
-
-            e.consume();
-            renderer.endSelectionAt(e.getX(), e.getY());
-
-            view.getCamera().setViewCenter(
-                    originalViewCenter.x + (dragStart.x - e.getScreenX()) * moveSpeed.getValue(),
-                    originalViewCenter.y + -(dragStart.y - e.getScreenY()) * moveSpeed.getValue(),
-                    originalViewCenter.z
-            );
-        });
-
+        view.getCamera().setAutoFitView(false);
     }
 
     private void handleScroll(ScrollEvent e) {
@@ -171,11 +155,88 @@ class Visualizer {
         // Prevent moving camera if zoom is over max or min (this condition should be as is as zoom factor is reversed - min zoom is bigger than max zoom)
         if (finalZoomFactor <= MAX_ZOOM || finalZoomFactor >= MIN_ZOOM)
             return;
-        Point2 pxCenter = cam.transformGuToPx(cam.getViewCenter().x, cam.getViewCenter().y, 0);
+        Point2 guCenter = cam.transformGuToPx(cam.getViewCenter().x, cam.getViewCenter().y, 0);
         Point3 guClicked = cam.transformPxToGu(e.getX(), e.getY());
-        double newRatioPx2Gu = cam.getMetrics().ratioPx2Gu / factor;
-        double x = guClicked.x + (pxCenter.x - e.getX()) / newRatioPx2Gu;
-        double y = guClicked.y - (pxCenter.y - e.getY()) / newRatioPx2Gu;
+        double newRatiogu2Gu = cam.getMetrics().ratioPx2Gu / factor;
+        double x = guClicked.x + (guCenter.x - e.getX()) / newRatiogu2Gu;
+        double y = guClicked.y - (guCenter.y - e.getY()) / newRatiogu2Gu;
         cam.setViewCenter(x, y, 0);
+    }
+
+    private void onCanvasZoom(ObservableValue<? extends Number> observableValue, Number oldVal, Number newVal) {
+        Camera cam = view.getCamera();
+        if (newVal.doubleValue() == cam.getViewPercent())
+            return;
+
+        cam.setViewPercent(newVal.doubleValue());
+        this.recalculateMoveSpeed();
+    }
+
+    private void onAutoLayoutPropertyChanged(ObservableValue<? extends Boolean> observableValue, Boolean oldVal, Boolean newVal) {
+        if (newVal)
+            viewer.enableAutoLayout();
+        else {
+            viewer.disableAutoLayout();
+            view.getCamera().setAutoFitView(false);
+            view.getCamera().setBounds(0, 0, 0, 100, 100, 100);
+        }
+    }
+
+    private void onCanvasMousePressed(MouseEvent mouseEvent) {
+        this.dragStart = new Point3(mouseEvent.getScreenX(), mouseEvent.getScreenY());
+        this.originalViewCenter = new Point3(view.getCamera().getViewCenter());
+        this.recalculateMoveSpeed();
+    }
+
+    private void recalculateMoveSpeed() {
+        this.moveSpeed = zoomFactor.doubleValue() * BASE_MOVE_SPEED;
+    }
+
+    private void onCanvasMouseDragged(MouseEvent e) {
+//            only move if button is middle mouse button or ctrl is pressed
+        if (!e.isControlDown() && e.getButton() != MouseButton.MIDDLE) return;
+
+        e.consume();
+
+//        System.out.println("renderer.getCamera().getMetrics() = " + renderer.getCamera().getMetrics());
+
+        renderer.endSelectionAt(0, 0);
+
+        view.getCamera().setViewCenter(
+                originalViewCenter.x + (dragStart.x - e.getScreenX()) * moveSpeed,
+                originalViewCenter.y + -(dragStart.y - e.getScreenY()) * moveSpeed,
+                originalViewCenter.z
+        );
+    }
+
+    public void visualizeNet(Net net) {
+//        double scaleFactor = getSizeScaleFactor(zoomFactor.doubleValue());
+//        final double sizeX = scaleFactor * RECT_WIDTH_BASE;
+//        final double sizeY = scaleFactor * RECT_HEIGHT_BASE;
+
+        final double sizeX = 1;
+        final double sizeY = 0.6;
+
+        net.allNodesStream().forEach(node -> {
+            logger.info("Adding node " + node.getId());
+            var graphNode = graph.addNode(node.getId());
+            if (node instanceof Place)
+                graphNode.setAttribute("isCircle");
+            graphNode.setAttribute("ui.style", "size: " + sizeX + "gu, " + (graphNode.hasAttribute("isCircle") ? sizeX : sizeY) + "gu;");
+            graphNode.setAttribute("ui.class", node.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
+            Sprite aSprite = spriteManager.addSprite(node.getId() + "label");
+            aSprite.attachToNode(node.getId()); //this sets where the Label will be (adjust to fit your purpose)
+            aSprite.setPosition(StyleConstants.Units.GU, 0.5, -0.5, 0);
+            aSprite.setAttribute("ui.label", node.getId());
+            aSprite.setAttribute("ui.class", "label");
+
+//            graphNode.setAttribute("ui.label", node.getId());
+        });
+
+        net.getArcs().forEach(arc -> {
+            logger.info("Adding arc " + arc.getId() + " (" + arc.input.getId() + "-" + arc.output.getId() + ")");
+            var graphArc = graph.addEdge(arc.getId(), arc.input.getId(), arc.output.getId(), true);
+            graphArc.setAttribute("ui.class", arc.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
+        });
     }
 }
