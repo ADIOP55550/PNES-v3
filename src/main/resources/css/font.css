@@ -1,0 +1,18 @@
+@font-face {
+    src: url("Font/pnesfont.ttf");
+}
+
+.root{
+    -fx-font-family: pnesfont !important;
+}
+
+Icon{
+    -fx-font-family: pnesfont !important;
+}
+
+.icon{
+    -fx-font-family: pnesfont !important;
+}
+
+
+
