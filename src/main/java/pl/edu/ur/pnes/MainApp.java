@@ -33,7 +33,6 @@ public class MainApp extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("main-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 320 * 3, 240 * 3);
 
-//        scene.getStylesheets().add("/home/jakub/Desktop/PNES-v3/src/main/resources/css/font.css");
         String cssy = Objects.requireNonNull(getClass().getResource("/css/font.css")).toExternalForm();
         scene.getStylesheets().add(cssy);
 
@@ -44,17 +43,6 @@ public class MainApp extends Application {
         stage.setScene(scene);
         stage.show();
         mainStage = stage;
-
-//        mainJMetro.reApplyTheme();
-//        mainJMetro.getOverridingStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/font.css")).toExternalForm());
-//        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/font.css")).toExternalForm());
-
-        mainJMetro.styleProperty().addListener(observable -> {
-            scene.getStylesheets().remove(cssy);
-            Platform.runLater(() -> {
-                scene.getStylesheets().add(cssy);
-            });
-        });
 
         mainController = fxmlLoader.getController();
 
