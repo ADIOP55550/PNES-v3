@@ -39,7 +39,6 @@ class Visualizer {
     static final int ARROW_HEIGHT_BASE = 4;
     static double BASE_MOVE_SPEED = 0.15;
 
-    //    final Queue<NetElement> toBeRedrawn = new ArrayDeque<>();
     final DoubleProperty zoomFactor;
     final BooleanProperty autoLayout = new SimpleBooleanProperty(false);
     SpriteManager spriteManager;
@@ -106,7 +105,6 @@ class Visualizer {
         view.getCamera().setGraphViewport(0, 0, 100, 100);
 
         view.getCamera().setViewPercent(1);
-//        moveSpeed.bind(zoomFactor.multiply(BASE_MOVE_SPEED));
 
 //        generateTestNodes(40);
 
@@ -135,10 +133,6 @@ class Visualizer {
     }
 
     private void tick() {
-//        while (!toBeRedrawn.isEmpty()) {
-//            var element = toBeRedrawn.remove();
-//            redrawElement(element);
-//        }
     }
 
     private void redrawElement(NetElement element) {
@@ -246,8 +240,6 @@ class Visualizer {
         if (!e.isControlDown() && e.getButton() != MouseButton.MIDDLE) return;
 
         e.consume();
-
-//        System.out.println("renderer.getCamera().getMetrics() = " + renderer.getCamera().getMetrics());
 
         renderer.endSelectionAt(0, 0);
 
