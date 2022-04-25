@@ -1,3 +1,27 @@
+graph{
+    fill-mode: plain;
+}
+
+graph.edit{
+    fill-mode: plain;
+    fill-color: #f5deb3;
+}
+
+graph.run{
+    fill-mode: plain;
+    fill-color: #87cefa;
+}
+
+graph.addtokens{
+    fill-mode: plain;
+    fill-color: #98fb98;
+}
+
+graph.removetokens{
+    fill-mode: plain;
+    fill-color: #f08080;
+}
+
 edge {
     arrow-size: 0.35gu, 0.18gu;
 }
@@ -18,7 +42,20 @@ sprite.label {
     text-size: 20gu;
     fill-mode: none;
     text-visibility-mode: under-zoom;
-    text-visibility: 1;
+    text-visibility: 0.2;
+}
+
+sprite.tokens {
+    shape: circle;
+    text-background-mode: none;
+    text-size: 20gu;
+    fill-mode: plain;
+    fill-color: gold;
+    size: 0.8gu, 0.8gu;
+    text-visibility-mode: under-zoom;
+    text-visibility: 0.3;
+    visibility-mode: under-zoom;
+    visibility: 0.3;
 }
 
 node.place {
@@ -29,12 +66,12 @@ node.place {
 
 node.transition {
     shape: box;
-    fill-color: lightblue;
 }
 
 node.activated {
-    stroke-color: red;
-    stroke-width: 0.3gu;
+    stroke-mode: plain;
+    stroke-color: orange;
+    stroke-width: 0.07gu;
 }
 
 node.ready {

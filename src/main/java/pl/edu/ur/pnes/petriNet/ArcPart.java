@@ -1,7 +1,6 @@
 package pl.edu.ur.pnes.petriNet;
 
 import java.util.Objects;
-import java.util.function.BiPredicate;
 
 public class ArcPart extends NetElement {
     private final Net net;
@@ -42,7 +41,7 @@ public class ArcPart extends NetElement {
      */
     public void setInput(Node input) {
         this.input = input;
-        net.markForRedraw(this);
+        needsRedraw.set(true);
     }
 
     public Node getOutput() {
@@ -57,7 +56,7 @@ public class ArcPart extends NetElement {
     public void setOutput(Node output) {
         this.output = output;
         isFinal = Objects.equals(this.output, parent.output);
-        net.markForRedraw(this);
+        needsRedraw.set(true);
     }
 
     public boolean isFinal() {
@@ -71,7 +70,7 @@ public class ArcPart extends NetElement {
      */
     public void setFinal(boolean aFinal) {
         if (aFinal != isFinal)
-            net.markForRedraw(this);
+            needsRedraw.set(true);
         isFinal = aFinal;
     }
 
