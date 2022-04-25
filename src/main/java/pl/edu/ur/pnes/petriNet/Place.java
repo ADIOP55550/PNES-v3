@@ -1,12 +1,16 @@
 package pl.edu.ur.pnes.petriNet;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Place extends Node {
     private static int placeCounter = 0;
-    private double tokens = 0;
+    private final DoubleProperty tokens = new SimpleDoubleProperty(0);
+    private final DoubleProperty capacity = new SimpleDoubleProperty(Double.MAX_VALUE);
 
     /**
      * inputs is a HashMap containing all the Place's input connections in form
@@ -38,11 +42,28 @@ public class Place extends Node {
         return List.of("place");
     }
 
-    double getTokens() {
+    public double getTokens() {
+        return tokens.get();
+    }
+
+    public DoubleProperty tokensProperty() {
         return tokens;
     }
 
-    void setTokens(double tokens) {
-        this.tokens = tokens;
+    public void setTokens(double tokens) {
+        this.tokens.set(tokens);
     }
+
+    public double getCapacity() {
+        return capacity.get();
+    }
+
+    public DoubleProperty capacityProperty() {
+        return capacity;
+    }
+
+    public void setCapacity(double capacity) {
+        this.capacity.set(capacity);
+    }
+
 }

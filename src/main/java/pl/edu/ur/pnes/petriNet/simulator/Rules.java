@@ -1,5 +1,7 @@
-package pl.edu.ur.pnes.petriNet;
+package pl.edu.ur.pnes.petriNet.simulator;
 
+
+import pl.edu.ur.pnes.petriNet.Transition;
 
 import java.util.function.Predicate;
 
