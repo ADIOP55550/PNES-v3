@@ -32,18 +32,15 @@ class Simulator {
         transition.inputs.forEach((place, arc) -> {
             logger.debug("changing input Place " + place.getId());
             place.setTokens(place.getTokens() - arc.getWeight());
-//            place.needsRedraw.set(true);
         });
 
         transition.outputs.forEach((place, arc) -> {
             logger.debug("changing output Place " + place.getId());
             place.setTokens(place.getTokens() + arc.getWeight());
-//            place.needsRedraw.set(true);
         });
 
         lastActivatedTransitions = transition;
         transition.lastActivated.set(true);
-//        transition.needsRedraw.set(true);
     }
 
 
