@@ -1,8 +1,10 @@
 package pl.edu.ur.pnes.petriNet;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiPredicate;
 
 /**
  * A representation of Net Arc. It can be composed of multiple ArcParts connecting Gizmos.
@@ -10,7 +12,7 @@ import java.util.function.BiPredicate;
  */
 public class Arc extends NetElement {
     private static int placeCounter = 0;
-    private double weight = 0;
+    private DoubleProperty weight = new SimpleDoubleProperty(1);
 
     public final List<ArcPart> parts = new ArrayList<>();
 
@@ -40,11 +42,15 @@ public class Arc extends NetElement {
         this.setId(newId);
     }
 
-    double getWeight() {
+    public double getWeight() {
+        return weight.get();
+    }
+
+    public DoubleProperty weightProperty() {
         return weight;
     }
 
-    void setWeight(double weight) {
-        this.weight = weight;
+    public void setWeight(double weight) {
+        this.weight.set(weight);
     }
 }

@@ -1,9 +1,11 @@
 package pl.edu.ur.pnes.petriNet.visualizer;
 
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import pl.edu.ur.pnes.petriNet.Net;
-import pl.edu.ur.pnes.petriNet.Place;
-import pl.edu.ur.pnes.petriNet.Transition;
+import pl.edu.ur.pnes.petriNet.NetElement;
+
+import java.util.Locale;
 
 public class VisualizerFacade {
     final Visualizer visualizer;
@@ -13,7 +15,9 @@ public class VisualizerFacade {
     }
 
     public void visualizeNet(Net net) {
-        visualizer.visualizeNet(net);
+        Platform.runLater(() -> {
+            visualizer.visualizeNet(net);
+        });
     }
 
     public DoubleProperty zoomProperty() {
@@ -34,5 +38,9 @@ public class VisualizerFacade {
 
     public void disableAutoLayout() {
         visualizer.autoLayout.setValue(false);
+    }
+
+    public void printSelectedNodes() {
+        visualizer.printSelectedNodes();
     }
 }

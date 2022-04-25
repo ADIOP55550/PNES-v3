@@ -22,9 +22,10 @@ import org.graphstream.ui.javafx.FxGraphRenderer;
 import org.graphstream.ui.spriteManager.Sprite;
 import org.graphstream.ui.spriteManager.SpriteManager;
 import org.graphstream.ui.view.camera.Camera;
-import pl.edu.ur.pnes.petriNet.Net;
-import pl.edu.ur.pnes.petriNet.Place;
+import pl.edu.ur.pnes.petriNet.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 
@@ -36,33 +37,49 @@ class Visualizer {
     static final int RECT_HEIGHT_BASE = 12;
     static final int ARROW_WIDTH_BASE = 9;
     static final int ARROW_HEIGHT_BASE = 4;
-    static double BASE_MOVE_SPEED = 0.2;
-    final DoubleProperty zoomFactor = new SimpleDoubleProperty(1) {
-        @Override
-        public void set(double v) {
-            v = Math.min(MIN_ZOOM, Math.max(MAX_ZOOM, v));
-            super.set(v);
-        }
-    };
+    static double BASE_MOVE_SPEED = 0.15;
+
+    final DoubleProperty zoomFactor;
     final BooleanProperty autoLayout = new SimpleBooleanProperty(false);
+    SpriteManager spriteManager;
 
     private final static Logger logger = LogManager.getLogger();
-
     private final FxViewer viewer;
     private final FxViewPanel view;
-    private final Graph graph;
-    SpriteManager spriteManager;
+    final Graph graph;
     private final FxGraphRenderer renderer;
-    private double moveSpeed = BASE_MOVE_SPEED * zoomFactor.doubleValue();
+    private double moveSpeed;
     private Point3 dragStart;
     private Point3 originalViewCenter;
+    private final Map<Place, Sprite> placeTokensSpriteMap = new HashMap<>();
+    private final Map<Node, Sprite> nodeIdSpriteMap = new HashMap<>();
+    private final Map<Arc, Sprite> arcIdSpriteMap = new HashMap<>();
+    private final Map<Arc, Sprite> arcWeightSpriteMap = new HashMap<>();
 
-    double getSizeScaleFactor(double zoomFactor) {
-        return (1 / Math.sqrt(zoomFactor)) * 2;
+    private final VisualizerGraphViewerListener viewerListener;
+    private boolean loop = true;
+    private Net net;
+
+    {
+        zoomFactor = new SimpleDoubleProperty(1) {
+            @Override
+            public void set(double v) {
+                v = Math.min(MIN_ZOOM, Math.max(MAX_ZOOM, v));
+                super.set(v);
+            }
+        };
+        moveSpeed = BASE_MOVE_SPEED * zoomFactor.doubleValue();
+
+
     }
 
     static {
         System.setProperty("org.graphstream.ui", "javafx");
+    }
+
+
+    double getSizeScaleFactor(double zoomFactor) {
+        return (1 / Math.sqrt(zoomFactor)) * 2;
     }
 
     Pane getElement() {
@@ -83,10 +100,11 @@ class Visualizer {
         this.viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
         this.view = (FxViewPanel) viewer.addView(FxViewer.DEFAULT_VIEW_ID, renderer);
 
+        this.viewerListener = new VisualizerGraphViewerListener(viewer);
+
         view.getCamera().setGraphViewport(0, 0, 100, 100);
 
         view.getCamera().setViewPercent(1);
-//        moveSpeed.bind(zoomFactor.multiply(BASE_MOVE_SPEED));
 
 //        generateTestNodes(40);
 
@@ -96,6 +114,32 @@ class Visualizer {
         view.setOnMousePressed(this::onCanvasMousePressed);
         view.setOnMouseDragged(this::onCanvasMouseDragged);
         setupGraph();
+        spawnUpdateThread();
+    }
+
+    private Thread spawnUpdateThread() {
+        var t = new Thread(() -> {
+            try {
+                while (loop) {
+                    this.tick();
+                    Thread.sleep(200);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        t.start();
+        return t;
+    }
+
+    private void tick() {
+    }
+
+    private void redrawElement(NetElement element) {
+        // TODO other redrawal parts
+        logger.info("Redrawing element " + element.getId());
+        var graphNode = graph.getNode(element.getId());
+        graphNode.setAttribute("ui.class", element.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
     }
 
     private void generateTestNodes(int node_count) {
@@ -133,9 +177,8 @@ class Visualizer {
     }
 
     private void setupGraph() {
-        double scaleFactor = getSizeScaleFactor(zoomFactor.doubleValue());
-        final double sizeX = scaleFactor * RECT_WIDTH_BASE;
-        final double sizeY = scaleFactor * RECT_HEIGHT_BASE;
+        view.getCamera().setAutoFitView(false);
+        view.getCamera().setBounds(0, 0, 0, 100, 100, 100);
 
         view.enableMouseOptions();
 //        equal to:
@@ -198,8 +241,6 @@ class Visualizer {
 
         e.consume();
 
-//        System.out.println("renderer.getCamera().getMetrics() = " + renderer.getCamera().getMetrics());
-
         renderer.endSelectionAt(0, 0);
 
         view.getCamera().setViewCenter(
@@ -209,34 +250,114 @@ class Visualizer {
         );
     }
 
-    public void visualizeNet(Net net) {
-//        double scaleFactor = getSizeScaleFactor(zoomFactor.doubleValue());
-//        final double sizeX = scaleFactor * RECT_WIDTH_BASE;
-//        final double sizeY = scaleFactor * RECT_HEIGHT_BASE;
+    public void printSelectedNodes() {
+        graph.nodes().forEach(node -> {
+            if (node.hasAttribute("ui.selected"))
+                System.out.println(node);
+        });
+    }
 
+    public void visualizeNet(Net net) {
         final double sizeX = 1;
         final double sizeY = 0.6;
 
-        net.allNodesStream().forEach(node -> {
+        this.net = net;
+
+        // hook redraw
+        net.allElementsStream().forEach(element -> {
+            logger.info("Hooking redraw listener to {}", element.getId());
+            element.needsRedraw.addListener((observableValue, oldVal, newVal) -> {
+                logger.info("Needs redraw changed for node {}", element.getId());
+                if (newVal) {
+                    this.redrawElement(element);
+                    element.needsRedraw.set(false);
+                }
+            });
+
+            if (element.needsRedraw.get())
+                element.needsRedraw.set(false);
+        });
+
+        net.getAllNodesStream().forEach(node -> {
             logger.info("Adding node " + node.getId());
+
+            /*
+            TODO Using node.getId() as an id inside graph is not a wise choice. The id can change during runtime,
+             thus making it impossible (or difficult) to reference node later.
+             An use of incremental counter as unique id on NetElement is worth considering.
+             Or maybe generating UUID for each Element (very resource expensive)
+             */
             var graphNode = graph.addNode(node.getId());
             if (node instanceof Place)
                 graphNode.setAttribute("isCircle");
             graphNode.setAttribute("ui.style", "size: " + sizeX + "gu, " + (graphNode.hasAttribute("isCircle") ? sizeX : sizeY) + "gu;");
             graphNode.setAttribute("ui.class", node.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
-            Sprite aSprite = spriteManager.addSprite(node.getId() + "label");
-            aSprite.attachToNode(node.getId()); //this sets where the Label will be (adjust to fit your purpose)
-            aSprite.setPosition(StyleConstants.Units.GU, 0.5, -0.5, 0);
-            aSprite.setAttribute("ui.label", node.getId());
-            aSprite.setAttribute("ui.class", "label");
 
-//            graphNode.setAttribute("ui.label", node.getId());
+            // setting up id label display sprite
+            Sprite idSprite = spriteManager.addSprite(node.getId() + "label");
+            idSprite.attachToNode(node.getId());
+            idSprite.setPosition(StyleConstants.Units.GU, 0.5, -0.5, 0);
+            idSprite.setAttribute("ui.class", "label");
+
+            // set label text and bind for future changes reflection
+            idSprite.setAttribute("ui.label", node.getId());
+            node.idProperty().addListener((observableValue, oldVal, newVal) -> {
+                idSprite.setAttribute("ui.label", newVal);
+            });
+            // Save sprite for future access
+            nodeIdSpriteMap.put(node, idSprite);
+
+            if (node instanceof Place) {
+                // setting up tokens display sprite
+                Sprite tokensSprite = spriteManager.addSprite(node.getId() + "tokens");
+                tokensSprite.attachToNode(node.getId());
+                tokensSprite.setAttribute("ui.class", "tokens");
+
+                // set label text and bind for future changes reflection
+                tokensSprite.setAttribute("ui.label", ((Place) node).getTokens());
+                ((Place) node).tokensProperty().addListener((observableValue, oldVal, newVal) -> {
+                    tokensSprite.setAttribute("ui.label", newVal);
+                });
+                // Save sprite for future access
+                placeTokensSpriteMap.put((Place) node, tokensSprite);
+            }
         });
 
         net.getArcs().forEach(arc -> {
             logger.info("Adding arc " + arc.getId() + " (" + arc.input.getId() + "-" + arc.output.getId() + ")");
             var graphArc = graph.addEdge(arc.getId(), arc.input.getId(), arc.output.getId(), true);
+
             graphArc.setAttribute("ui.class", arc.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
+
+
+            // setting up id label display sprite
+            Sprite idSprite = spriteManager.addSprite(arc.getId() + "label");
+            idSprite.attachToEdge(arc.getId());
+            idSprite.setPosition(StyleConstants.Units.GU, 0.5, -0.5, 0);
+            idSprite.setAttribute("ui.class", "label");
+
+            // set label text and bind for future changes reflection
+            idSprite.setAttribute("ui.label", arc.getId());
+            arc.idProperty().addListener((observableValue, oldVal, newVal) -> {
+                idSprite.setAttribute("ui.label", newVal);
+            });
+            // Save sprite for future access
+            arcIdSpriteMap.put(arc, idSprite);
+
+            // setting up tokens display sprite
+            Sprite tokensSprite = spriteManager.addSprite(arc.getId() + "tokens");
+            tokensSprite.attachToEdge(arc.getId());
+            tokensSprite.setPosition(StyleConstants.Units.GU, 0.5, -0.85, 0);
+            tokensSprite.setAttribute("ui.class", "label");
+
+            // set label text and bind for future changes reflection
+            tokensSprite.setAttribute("ui.label", (arc).getWeight());
+            (arc).weightProperty().addListener((observableValue, oldVal, newVal) -> {
+                tokensSprite.setAttribute("ui.label", newVal);
+            });
+            // Save sprite for future access
+            arcWeightSpriteMap.put(arc, tokensSprite);
+
         });
     }
 }

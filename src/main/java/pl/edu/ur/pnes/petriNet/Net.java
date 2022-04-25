@@ -1,5 +1,6 @@
 package pl.edu.ur.pnes.petriNet;
 
+import pl.edu.ur.pnes.petriNet.simulator.Rules;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
 import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;
 
@@ -22,7 +23,6 @@ public abstract class Net {
     List<Arc> arcs = new ArrayList<>();
     List<Place> places = new ArrayList<>();
     List<Transition> transitions = new ArrayList<>();
-    Queue<NetElement> toBeRedrawn = new ArrayDeque<>();
 
     public List<Arc> getArcs() {
         return arcs;
@@ -46,22 +46,50 @@ public abstract class Net {
         );
     }
 
-    public Stream<Node> allNodesStream() {
+    public Stream<Node> getAllNodesStream() {
         return Stream.concat(
                 places.stream(),
                 transitions.stream()
         );
     }
 
-    public void markForRedraw(NetElement element) {
-        if (toBeRedrawn.contains(element))
-            return;
-        toBeRedrawn.add(element);
+    public void addElements(Collection<NetElement> elements) {
+        elements.forEach(this::addElement);
+    }
+
+    public void addElements(NetElement... elements) {
+        Arrays.stream(elements).forEachOrdered(this::addElement);
     }
 
     public void addElement(NetElement element) {
         if (element instanceof Arc) {
-            arcs.add((Arc) element);
+            Arc arc = (Arc) element;
+            arcs.add(arc);
+
+            if (arc.input == null || arc.output == null)
+                return;
+            if (arc.input instanceof Place) {
+                // Place --- Arc --> Transition
+                var input = this.places.stream().filter(place -> Objects.equals(place, arc.input)).findFirst().orElseThrow(() -> new IllegalArgumentException("No place with id " + arc.input.getId() + " found in net. Add it to the net before adding arc " + arc.getId()));
+                var output = this.transitions.stream().filter(transition -> Objects.equals(transition, arc.output)).findFirst().orElseThrow(() -> new IllegalArgumentException("No transition with id " + arc.output.getId() + " found in net. Add it to the net before adding arc " + arc.getId()));
+                input.outputs.put(output, arc);
+                output.inputs.put(input, arc);
+            }
+            if (arc.input instanceof Transition) {
+                // Transition --- Arc --> Place
+                var output = this.places.stream()
+                        .filter(place -> Objects.equals(place, arc.output))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("No place with id " + arc.output.getId() + " found in net. Add it to the net before adding arc " + arc.getId()));
+                var input = this.transitions.stream()
+                        .filter(transition -> Objects.equals(transition, arc.input))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("No transition with id " + arc.input.getId() + " found in net. Add it to the net before adding arc " + arc.getId()));
+                input.outputs.put(output, arc);
+                output.inputs.put(input, arc);
+            }
+
+
             return;
         }
         if (element instanceof Place) {
@@ -70,7 +98,12 @@ public abstract class Net {
         }
         if (element instanceof Transition) {
             transitions.add((Transition) element);
-//            return;
         }
+    }
+
+
+    public Stream<Transition> getTransitionsThatCanBeActivated() {
+        return getTransitions().stream()
+                .filter(t -> activationRule.test(t));
     }
 }
