@@ -43,14 +43,4 @@ public class VisualizerFacade {
     public void printSelectedNodes() {
         visualizer.printSelectedNodes();
     }
-
-//    public void markForRedraw(NetElement element) {
-//        if (visualizer.toBeRedrawn.contains(element))
-//            return;
-//        visualizer.toBeRedrawn.add(element);
-//    }
-//
-//    public void setMode(Mode mode) {
-//        visualizer.graph.setAttribute("ui.class", mode.toString().toLowerCase(Locale.ROOT).replaceAll("[_]", ""));
-//    }
 }
