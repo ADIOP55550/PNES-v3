@@ -15,7 +15,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class NetElement{
+public abstract class NetElement {
     private final Logger logger = LogManager.getLogger(NetElement.class);
     public final StringProperty label = new SimpleStringProperty();
     private final Net net;
@@ -64,13 +64,9 @@ public abstract class NetElement{
     }
 
     public String getId() {
-        return id.get();
-    }
-
-    public StringProperty idProperty() {
         return id;
     }
-
+    
     public String getName() {
         return name.get();
     }

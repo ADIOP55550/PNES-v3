@@ -133,33 +133,5 @@ class Simulator {
         transitionsThatCanBeActivated.clear();
     }
 
-    void fireTransition(Transition transition) throws TransitionCannotBeActivatedException {
-        logger.info("Transition fired! " + transition.getId());
-
-
-        if (lastActivatedTransitions != null) {
-            lastActivatedTransitions.lastActivated.set(false);
-            lastActivatedTransitions = null;
-        }
-
-        if (!net.activationRule.test(transition)) {
-            logger.error("Transition " + transition.getId() + " could not be activated!");
-            throw new TransitionCannotBeActivatedException("This transition cannot be activated");
-        }
-
-        transition.inputs.forEach((place, arc) -> {
-            logger.debug("changing input Place " + place.getId());
-            place.setTokens(place.getTokens() - arc.getWeight());
-        });
-
-        transition.outputs.forEach((place, arc) -> {
-            logger.debug("changing output Place " + place.getId());
-            place.setTokens(place.getTokens() + arc.getWeight());
-        });
-
-        lastActivatedTransitions = transition;
-        transition.lastActivated.set(true);
-    }
-
 
 }
