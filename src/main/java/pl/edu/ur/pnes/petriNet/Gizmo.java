@@ -14,7 +14,7 @@ public class Gizmo extends Node {
             gizmoCounter++;
             newId = "g" + gizmoCounter;
         }
-        while (net.isIdUsed(newId));
-        this.setId(newId);
+        while (net.isNameUsed(newId));
+        this.setName(newId);
     }
 }
