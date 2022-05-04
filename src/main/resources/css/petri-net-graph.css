@@ -82,6 +82,24 @@ node.active {
     fill-color: orange;
 }
 
+node.hide {
+    fill-mode: none;
+    visibility-mode: hidden;
+    text-mode: hidden;
+}
+
+edge.hide {
+    fill-mode: none;
+    visibility-mode: hidden;
+    text-mode: hidden;
+}
+
+sprite.hide {
+    fill-mode: none;
+    visibility-mode: hidden;
+    text-mode: hidden;
+}
+
 node:selected {
     stroke-mode: plain;
     stroke-color: red;

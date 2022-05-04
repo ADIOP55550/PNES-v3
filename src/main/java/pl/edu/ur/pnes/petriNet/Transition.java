@@ -44,8 +44,8 @@ public class Transition extends Node {
             transitionCounter++;
             newId = "t" + transitionCounter;
         }
-        while (net.isIdUsed(newId));
-        this.setId(newId);
+        while (net.isNameUsed(newId));
+        this.setName(newId);
         classesList.add("transition");
     }
 

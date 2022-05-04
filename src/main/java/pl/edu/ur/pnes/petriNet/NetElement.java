@@ -15,27 +15,28 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class NetElement {
+public abstract class NetElement{
     private final Logger logger = LogManager.getLogger(NetElement.class);
     public final StringProperty label = new SimpleStringProperty();
     private final Net net;
-    private final StringProperty id = new SimpleStringProperty() {
+    private final String id;
+    private final StringProperty name = new SimpleStringProperty() {
         @Override
-        public void set(String newId) {
-            // If this.id is equal to the newId, do nothing
-            if (Objects.equals(newId, this.get()))
+        public void set(String newName) {
+            // If this.name is equal to the newName, do nothing
+            if (Objects.equals(newName, this.get()))
                 return;
 
-            // If id is already used, throw
-            if (net.usedIds.contains(newId))
+            // If name is already used, throw
+            if (net.usedNames.contains(newName))
                 throw new IllegalArgumentException("NetElement with this id already exists.");
 
-            // Remove previous id from used ids
-            net.usedIds.remove(this.get());
-            // Add new id to used ids
-            net.usedIds.add(newId);
-            // Set id
-            super.set(newId);
+            // Remove previous name from used names
+            net.usedNames.remove(this.get());
+            // Add new name to used names
+            net.usedNames.add(newName);
+            // Set name
+            super.set(newName);
         }
     };
     public final BooleanProperty needsRedraw = new SimpleBooleanProperty(false);
@@ -43,17 +44,22 @@ public abstract class NetElement {
 
     NetElement(Net net) {
         this.net = net;
+
+        net.lastId++;
+        this.id = String.valueOf(net.lastId);
+
         needsRedraw.addListener((observableValue, aBoolean, t1) -> {
             if (t1)
-                logger.info("Now needs redraw: {}", this.getId());
+                logger.info("Now needs redraw: {}", this.getName());
             else
-                logger.info("No longer needs redraw: {}", this.getId());
+                logger.info("No longer needs redraw: {}", this.getName());
+
         });
         classesList.addListener((ListChangeListener<? super String>) change -> {
             logger.info("Classes list changed!");
             System.out.println("needs redraw before: " + needsRedraw.get());
             needsRedraw.set(true);
-            logger.info("Now {} shall need redraw!", this.getId());
+            logger.info("Now {} shall need redraw!", this.getName());
         });
     }
 
@@ -63,6 +69,24 @@ public abstract class NetElement {
 
     public StringProperty idProperty() {
         return id;
+    }
+
+    public String getName() {
+        return name.get();
+    }
+
+    public StringProperty nameProperty() {
+        return name;
+    }
+
+    /**
+     * Set name of the element. If a name is already in use in the net, IllegalArgumentException is thrown.
+     *
+     * @param newName New name of the element
+     * @throws IllegalArgumentException If given name is already in use
+     */
+    public void setName(String newName) throws IllegalArgumentException {
+        this.name.set(newName);
     }
 
     /**
@@ -85,16 +109,4 @@ public abstract class NetElement {
     public List<String> getClasses() {
         return classesList;
     }
-
-    /**
-     * Set id of the element. If an id is already in use in the net, IllegalArgumentException is thrown.
-     *
-     * @param newId New id of the element
-     * @throws IllegalArgumentException If given id is already in use
-     */
-    public void setId(String newId) throws IllegalArgumentException {
-        this.id.set(newId);
-    }
-
-
 }
