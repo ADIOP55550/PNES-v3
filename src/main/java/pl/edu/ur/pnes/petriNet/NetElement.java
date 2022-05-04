@@ -53,6 +53,7 @@ public abstract class NetElement{
                 logger.info("Now needs redraw: {}", this.getName());
             else
                 logger.info("No longer needs redraw: {}", this.getName());
+
         });
         classesList.addListener((ListChangeListener<? super String>) change -> {
             logger.info("Classes list changed!");
@@ -63,6 +64,10 @@ public abstract class NetElement{
     }
 
     public String getId() {
+        return id.get();
+    }
+
+    public StringProperty idProperty() {
         return id;
     }
 

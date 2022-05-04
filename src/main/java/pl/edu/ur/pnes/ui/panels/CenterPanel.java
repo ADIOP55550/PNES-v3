@@ -56,6 +56,7 @@ public class CenterPanel extends CustomPanel {
 
     ObjectProperty<EditorMode> editorMode = new SimpleObjectProperty<>(EditorMode.EDIT);
 
+
     public void initialize() {
 
         editorMode.addListener((observable, oldValue, newValue) -> {
@@ -67,6 +68,15 @@ public class CenterPanel extends CustomPanel {
                     visualizerFacade.setBackgroundColor(Color.BLUE);
                 }
             }
+        });
+
+        graphPane.setOnMousePressed(mouseEvent -> {
+            if (mouseEvent.isControlDown() || mouseEvent.isMiddleButtonDown())
+                graphPane.setCursor(Cursor.MOVE);
+        });
+
+        graphPane.setOnMouseReleased(mouseEvent -> {
+            graphPane.setCursor(Cursor.DEFAULT);
         });
 
         graphPane.setOnMousePressed(mouseEvent -> {

@@ -71,9 +71,8 @@ public abstract class Net{
                 return;
             if (arc.input instanceof Place) {
                 // Place --- Arc --> Transition
-                var input = this.places.stream().filter(place -> Objects.equals(place, arc.input)).findFirst().orElseThrow(() -> new IllegalArgumentException("No place with id " + arc.input.getName() + " found in net. Add it to the net before adding arc " + arc.getName()));
-                var output = this.transitions.stream().filter(transition -> Objects.equals(transition, arc.output)).findFirst().orElseThrow(() -> new IllegalArgumentException("No transition with id " + arc.output.getName() + " found in net. Add it to the net before adding arc " + arc.getName()));
-//                var output = this.transitions.stream().filter(transition -> Objects.equals(transition, arc.output)).findFirst().orElse(null);
+                var input = this.places.stream().filter(place -> Objects.equals(place, arc.input)).findFirst().orElseThrow(() -> new IllegalArgumentException("No place with id " + arc.input.getId() + " found in net. Add it to the net before adding arc " + arc.getId()));
+                var output = this.transitions.stream().filter(transition -> Objects.equals(transition, arc.output)).findFirst().orElseThrow(() -> new IllegalArgumentException("No transition with id " + arc.output.getId() + " found in net. Add it to the net before adding arc " + arc.getId()));
                 input.outputs.put(output, arc);
                 output.inputs.put(input, arc);
             }
@@ -100,7 +99,6 @@ public abstract class Net{
         }
         if (element instanceof Transition) {
             transitions.add((Transition) element);
-//            return;
         }
     }
 

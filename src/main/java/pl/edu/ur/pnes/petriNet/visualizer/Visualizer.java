@@ -40,7 +40,6 @@ class Visualizer {
     static final int ARROW_HEIGHT_BASE = 4;
     static double BASE_MOVE_SPEED = 0.15;
 
-    //    final Queue<NetElement> toBeRedrawn = new ArrayDeque<>();
     final DoubleProperty zoomFactor;
     final BooleanProperty autoLayout = new SimpleBooleanProperty(false);
     SpriteManager spriteManager;
@@ -61,7 +60,6 @@ class Visualizer {
     private final VisualizerGraphViewerListener viewerListener;
     private boolean loop = true;
     private Net net;
-    private final List<ChangeListener<?>> preventGarbageCollection = new LinkedList<>();
 
     {
         zoomFactor = new SimpleDoubleProperty(1) {
@@ -108,7 +106,6 @@ class Visualizer {
         view.getCamera().setGraphViewport(0, 0, 100, 100);
 
         view.getCamera().setViewPercent(1);
-//        moveSpeed.bind(zoomFactor.multiply(BASE_MOVE_SPEED));
 
 //        generateTestNodes(40);
 
@@ -146,6 +143,7 @@ class Visualizer {
     private void redrawElement(NetElement element) {
         // TODO other redrawal parts
         logger.info("Redrawing element " + element.getName());
+
         var graphNode = graph.getNode(element.getId());
         graphNode.setAttribute("ui.class", element.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
     }
@@ -241,8 +239,6 @@ class Visualizer {
 
         e.consume();
 
-//        System.out.println("renderer.getCamera().getMetrics() = " + renderer.getCamera().getMetrics());
-
         renderer.endSelectionAt(0, 0);
 
         view.getCamera().setViewCenter(
@@ -285,6 +281,7 @@ class Visualizer {
     }
 
     private void addNodeToNet(Node node) {
+
         final double sizeX = 1;
         final double sizeY = 0.6;
         logger.info("Adding node " + node.getName());

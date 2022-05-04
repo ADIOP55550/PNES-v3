@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pl.edu.ur.pnes.petriNet.Transition;
 
+
 import java.util.function.DoubleConsumer;
 
 public class SimulatorFacade {
