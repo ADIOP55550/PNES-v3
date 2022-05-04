@@ -9,7 +9,7 @@ import org.graphstream.ui.view.ViewerPipe;
 
 public final class VisualizerGraphViewerListener implements ViewerListener {
     private boolean loop = true;
-    private boolean log = true;
+    private boolean log = false;
     private final static Logger logger = LogManager.getLogger(VisualizerGraphViewerListener.class);
 
     public VisualizerGraphViewerListener(Viewer viewer) {

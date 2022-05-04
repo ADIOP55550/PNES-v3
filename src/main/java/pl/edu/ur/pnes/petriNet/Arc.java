@@ -38,8 +38,8 @@ public class Arc extends NetElement {
             newId = "a" + placeCounter;
         }
         // increment ids until free one is found
-        while (net.isIdUsed(newId));
-        this.setId(newId);
+        while (net.isNameUsed(newId));
+        this.setName(newId);
     }
 
     public double getWeight() {

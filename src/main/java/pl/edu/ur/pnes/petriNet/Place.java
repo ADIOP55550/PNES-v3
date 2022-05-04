@@ -32,8 +32,8 @@ public class Place extends Node {
             newId = "p" + placeCounter;
         }
         // increment ids until free one is found
-        while (net.isIdUsed(newId));
-        this.setId(newId);
+        while (net.isNameUsed(newId));
+        this.setName(newId);
     }
 
 

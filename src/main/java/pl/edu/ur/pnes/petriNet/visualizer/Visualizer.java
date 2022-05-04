@@ -4,6 +4,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -11,6 +13,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.ui.fx_viewer.FxViewPanel;
@@ -24,9 +27,7 @@ import org.graphstream.ui.spriteManager.SpriteManager;
 import org.graphstream.ui.view.camera.Camera;
 import pl.edu.ur.pnes.petriNet.*;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 
 class Visualizer {
@@ -60,6 +61,7 @@ class Visualizer {
     private final VisualizerGraphViewerListener viewerListener;
     private boolean loop = true;
     private Net net;
+    private final List<ChangeListener<?>> preventGarbageCollection = new LinkedList<>();
 
     {
         zoomFactor = new SimpleDoubleProperty(1) {
@@ -143,7 +145,7 @@ class Visualizer {
 
     private void redrawElement(NetElement element) {
         // TODO other redrawal parts
-        logger.info("Redrawing element " + element.getId());
+        logger.info("Redrawing element " + element.getName());
         var graphNode = graph.getNode(element.getId());
         graphNode.setAttribute("ui.class", element.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
     }
@@ -165,14 +167,6 @@ class Visualizer {
         }
         for (int i = 1; i < node_count; i++) {
             graph.addEdge("a" + (i - 1) + "-" + i, "a" + (i - 1), "a" + i, true);
-
-
-//            int a1 = r.nextInt(node_count);
-//            int a2 = r.nextInt(node_count);
-//            try {
-//                graph.addEdge("a" + a1 + "-" + a2, "a" + a1, "a" + a2);
-//            } catch (Exception ignored) {
-//            }
         }
 
         graph.addEdge("AB", "A", "B", true);
@@ -266,16 +260,15 @@ class Visualizer {
     }
 
     public void visualizeNet(Net net) {
-        final double sizeX = 1;
-        final double sizeY = 0.6;
+
 
         this.net = net;
 
         // hook redraw
         net.allElementsStream().forEach(element -> {
-            logger.info("Hooking redraw listener to {}", element.getId());
+            logger.info("Hooking redraw listener to {}", element.getName());
             element.needsRedraw.addListener((observableValue, oldVal, newVal) -> {
-                logger.info("Needs redraw changed for node {}", element.getId());
+                logger.info("Needs redraw changed for node {}", element.getName());
                 if (newVal) {
                     this.redrawElement(element);
                     element.needsRedraw.set(false);
@@ -286,86 +279,144 @@ class Visualizer {
                 element.needsRedraw.set(false);
         });
 
-        net.getAllNodesStream().forEach(node -> {
-            logger.info("Adding node " + node.getId());
+        net.getAllNodesStream().forEach(this::addNodeToNet);
 
-            /*
-            TODO Using node.getId() as an id inside graph is not a wise choice. The id can change during runtime,
-             thus making it impossible (or difficult) to reference node later.
-             An use of incremental counter as unique id on NetElement is worth considering.
-             Or maybe generating UUID for each Element (very resource expensive)
-             */
-            var graphNode = graph.addNode(node.getId());
-            if (node instanceof Place)
-                graphNode.setAttribute("isCircle");
-            graphNode.setAttribute("ui.style", "size: " + sizeX + "gu, " + (graphNode.hasAttribute("isCircle") ? sizeX : sizeY) + "gu;");
-            graphNode.setAttribute("ui.class", node.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
+        net.getArcs().forEach(this::addArcToNet);
+    }
 
-            // setting up id label display sprite
-            Sprite idSprite = spriteManager.addSprite(node.getId() + "label");
-            idSprite.attachToNode(node.getId());
-            idSprite.setPosition(StyleConstants.Units.GU, 0.5, -0.5, 0);
-            idSprite.setAttribute("ui.class", "label");
+    private void addNodeToNet(Node node) {
+        final double sizeX = 1;
+        final double sizeY = 0.6;
+        logger.info("Adding node " + node.getName());
 
-            // set label text and bind for future changes reflection
-            idSprite.setAttribute("ui.label", node.getId());
-            node.idProperty().addListener((observableValue, oldVal, newVal) -> {
-                idSprite.setAttribute("ui.label", newVal);
-            });
-            // Save sprite for future access
-            nodeIdSpriteMap.put(node, idSprite);
+        var graphNode = graph.addNode(node.getId());
+        if (node instanceof Place)
+            graphNode.setAttribute("isCircle");
+        graphNode.setAttribute("ui.style", "size: " + sizeX + "gu, " + (graphNode.hasAttribute("isCircle") ? sizeX : sizeY) + "gu;");
+        graphNode.setAttribute("ui.class", node.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
 
-            if (node instanceof Place) {
-                // setting up tokens display sprite
-                Sprite tokensSprite = spriteManager.addSprite(node.getId() + "tokens");
-                tokensSprite.attachToNode(node.getId());
-                tokensSprite.setAttribute("ui.class", "tokens");
-
-                // set label text and bind for future changes reflection
-                tokensSprite.setAttribute("ui.label", ((Place) node).getTokens());
-                ((Place) node).tokensProperty().addListener((observableValue, oldVal, newVal) -> {
-                    tokensSprite.setAttribute("ui.label", newVal);
-                });
-                // Save sprite for future access
-                placeTokensSpriteMap.put((Place) node, tokensSprite);
-            }
+        Sprite nameSprite = getAttachedTextSprite(
+                node,
+                "label",
+                new Point3(0.5, -0.5, 0),
+                node.getName()
+        );
+        // attach listener for future label changes
+        node.nameProperty().addListener((observableValue, oldVal, newVal) -> {
+            logger.debug("New value for sprite {}: {}", nameSprite.getId(), newVal);
+            nameSprite.setAttribute("ui.label", newVal);
         });
 
-        net.getArcs().forEach(arc -> {
-            logger.info("Adding arc " + arc.getId() + " (" + arc.input.getId() + "-" + arc.output.getId() + ")");
-            var graphArc = graph.addEdge(arc.getId(), arc.input.getId(), arc.output.getId(), true);
+        nodeIdSpriteMap.put(node, nameSprite);
 
-            graphArc.setAttribute("ui.class", arc.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
+        // only Places can display Tokens
+        if (node instanceof Place) {
+            Sprite tokensSprite = getAttachedTextSprite(
+                    node,
+                    "tokens",
+                    Point3.NULL_POINT3,
+                    String.valueOf(((Place) node).getTokens()),
+                    List.of("tokens")
+            );
 
-
-            // setting up id label display sprite
-            Sprite idSprite = spriteManager.addSprite(arc.getId() + "label");
-            idSprite.attachToEdge(arc.getId());
-            idSprite.setPosition(StyleConstants.Units.GU, 0.5, -0.5, 0);
-            idSprite.setAttribute("ui.class", "label");
-
-            // set label text and bind for future changes reflection
-            idSprite.setAttribute("ui.label", arc.getId());
-            arc.idProperty().addListener((observableValue, oldVal, newVal) -> {
-                idSprite.setAttribute("ui.label", newVal);
-            });
-            // Save sprite for future access
-            arcIdSpriteMap.put(arc, idSprite);
-
-            // setting up tokens display sprite
-            Sprite tokensSprite = spriteManager.addSprite(arc.getId() + "tokens");
-            tokensSprite.attachToEdge(arc.getId());
-            tokensSprite.setPosition(StyleConstants.Units.GU, 0.5, -0.85, 0);
-            tokensSprite.setAttribute("ui.class", "label");
-
-            // set label text and bind for future changes reflection
-            tokensSprite.setAttribute("ui.label", (arc).getWeight());
-            (arc).weightProperty().addListener((observableValue, oldVal, newVal) -> {
+            // attach listener for future label changes
+            ((Place) node).tokensProperty().addListener((observableValue, oldVal, newVal) -> {
+                logger.debug("New value for sprite {}: {}", tokensSprite.getId(), newVal);
                 tokensSprite.setAttribute("ui.label", newVal);
             });
-            // Save sprite for future access
-            arcWeightSpriteMap.put(arc, tokensSprite);
+//            showSpriteConditionally(tokensSprite, ((Place) node).tokensProperty().isNotEqualTo(0));
+            placeTokensSpriteMap.put((Place) node, tokensSprite);
+        }
+    }
 
+    private void addArcToNet(Arc arc) {
+        logger.info("Adding arc " + arc.getId() + " (" + arc.input.getId() + "-" + arc.output.getId() + ")");
+        Edge graphArc;
+        graphArc = graph.addEdge(arc.getId(), arc.input.getId(), arc.output.getId(), true);
+        graphArc.setAttribute("ui.class", arc.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
+
+        Sprite nameSprite = getAttachedTextSprite(
+                arc,
+                "label",
+                new Point3(0.5, -0.5, 0),
+                arc.getName()
+        );
+        // attach listener for future label changes
+        arc.nameProperty().addListener((observableValue, oldVal, newVal) -> {
+            logger.debug("New value for sprite {}: {}", nameSprite.getId(), newVal);
+            nameSprite.setAttribute("ui.label", newVal);
         });
+        arcIdSpriteMap.put(arc, nameSprite);
+
+        Sprite weightSprite = getAttachedTextSprite(
+                arc,
+                "weight",
+                new Point3(0.5, -0.85, 0),
+                String.valueOf(arc.getWeight())
+        );
+        // attach listener for future label changes
+        arc.weightProperty().addListener((observableValue, oldVal, newVal) -> {
+            logger.debug("New value for sprite {}: {}", weightSprite.getId(), newVal);
+            weightSprite.setAttribute("ui.label", newVal);
+        });
+
+        showSpriteConditionally(weightSprite, arc.weightProperty().isNotEqualTo(1));
+        arcWeightSpriteMap.put(arc, weightSprite);
+    }
+
+    private Sprite getAttachedTextSprite(NetElement element, String idAppendix, Point3 offset, String initialValue) {
+        return getAttachedTextSprite(element, idAppendix, offset, initialValue, List.of("label"));
+    }
+
+    private Sprite getAttachedTextSprite(NetElement element, String idAppendix, Point3 offset, String initialValue, List<String> uiClasses) {
+        System.out.println();
+        System.out.println("Visualizer.getAttachedTextSprite");
+        System.out.println("element = " + element + ", idAppendix = " + idAppendix + ", offset = " + offset + ", initialValue = " + initialValue + ", uiClasses = " + uiClasses);
+        // setting up sprite
+        Sprite sprite = spriteManager.addSprite(element.getId() + idAppendix);
+
+        // attach to the given element
+        if (element instanceof Arc)
+            sprite.attachToEdge(element.getId());
+        else
+            sprite.attachToNode(element.getId());
+
+        // Apply offset
+        sprite.setPosition(StyleConstants.Units.GU, offset.x, offset.y, offset.z);
+
+        // Apply classes
+        sprite.setAttribute("ui.class", uiClasses.stream().reduce("", (s, s2) -> s + ", " + s2));
+
+        // set label text
+        sprite.setAttribute("ui.label", initialValue);
+
+        return sprite;
+    }
+
+    private void showSpriteConditionally(Sprite sprite, ObservableBooleanValue shownCondition) {
+        // Create changes listener
+        final ChangeListener<Boolean> changeListener = (observableValue, oldVal, newVal) -> {
+            if (newVal)
+                logger.info("Snowing sprite {} conditionally", sprite.getId());
+            else
+                logger.info("Hiding sprite {} conditionally", sprite.getId());
+
+            if (!sprite.hasAttribute("ui.class"))
+                sprite.setAttribute("ui.class", "");
+
+            if (newVal)
+                // If it needs to be shown, remove all .hidden classes
+                sprite.setAttribute("ui.class", ((String) sprite.getAttribute("ui.class")).replaceAll(", hide", ""));
+
+            else
+                // Else, add .hide class
+                sprite.setAttribute("ui.class", sprite.getAttribute("ui.class") + ", hide");
+        };
+
+        // Attach the listener
+        shownCondition.addListener(changeListener);
+
+        // Fire it once to set initial class
+        changeListener.changed(shownCondition, !shownCondition.get(), shownCondition.get());
     }
 }
