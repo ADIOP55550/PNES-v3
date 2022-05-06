@@ -20,11 +20,13 @@ import org.graphstream.ui.fx_viewer.FxViewPanel;
 import org.graphstream.ui.fx_viewer.FxViewer;
 import org.graphstream.ui.geom.Point2;
 import org.graphstream.ui.geom.Point3;
+import org.graphstream.ui.graphicGraph.GraphicElement;
 import org.graphstream.ui.graphicGraph.stylesheet.StyleConstants;
 import org.graphstream.ui.javafx.FxGraphRenderer;
 import org.graphstream.ui.spriteManager.Sprite;
 import org.graphstream.ui.spriteManager.SpriteManager;
 import org.graphstream.ui.view.camera.Camera;
+import org.graphstream.ui.view.util.InteractiveElement;
 import pl.edu.ur.pnes.petriNet.*;
 import pl.edu.ur.pnes.petriNet.visualizer.events.VGVLEvent;
 
@@ -292,7 +294,7 @@ class Visualizer {
         net.getArcs().forEach(this::addArcToNet);
     }
 
-    private void addNodeToNet(Node node) {
+    void addNodeToNet(Node node) {
 
         final double sizeX = 1;
         final double sizeY = 0.6;
@@ -340,7 +342,7 @@ class Visualizer {
         }
     }
 
-    private void addArcToNet(Arc arc) {
+    void addArcToNet(Arc arc) {
         logger.info("Adding arc " + arc.getId() + " (" + arc.input.getId() + "-" + arc.output.getId() + ")");
         Edge graphArc;
         graphArc = graph.addEdge(arc.getId(), arc.input.getId(), arc.output.getId(), true);
@@ -435,4 +437,28 @@ class Visualizer {
         // Fire it once to set initial class
         changeListener.changed(shownCondition, !shownCondition.get(), shownCondition.get());
     }
+
+    Optional<GraphicElement> findGraphicElementAt(double x, double y, EnumSet<InteractiveElement> elementType) {
+        return Optional.ofNullable(view.getCamera().findGraphicElementAt(viewer.getGraphicGraph(), elementType, x, y));
+    }
+
+    Optional<GraphicElement> findGraphicElementAt(double x, double y) {
+        return findGraphicElementAt(x, y, EnumSet.of(InteractiveElement.NODE));
+    }
+
+    void setNodePosition(Node node, Point3 graphPoint) {
+        graph.getNode(node.getId()).setAttribute("xyz", graphPoint.x, graphPoint.y, graphPoint.z);
+    }
+
+    Point3 mousePositionToGraphPosition(Point3 mousePoint) {
+        final Point3 loVisible = view.getCamera().getMetrics().loVisible;
+        final Point3 hiVisible = view.getCamera().getMetrics().hiVisible;
+        final double inverseRatioPx2Gu = 1 / view.getCamera().getMetrics().ratioPx2Gu;
+        return new Point3(
+                loVisible.x + (mousePoint.x * inverseRatioPx2Gu),
+                hiVisible.y - (mousePoint.y * inverseRatioPx2Gu),
+                loVisible.z + (mousePoint.z * inverseRatioPx2Gu)
+        );
+    }
+
 }
