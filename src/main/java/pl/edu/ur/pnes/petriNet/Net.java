@@ -1,5 +1,6 @@
 package pl.edu.ur.pnes.petriNet;
 
+import org.graphstream.ui.geom.Point3;
 import pl.edu.ur.pnes.petriNet.simulator.Rules;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
 import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;

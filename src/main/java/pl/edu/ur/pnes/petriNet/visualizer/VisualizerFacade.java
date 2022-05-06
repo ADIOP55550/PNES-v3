@@ -4,17 +4,20 @@ import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import org.graphstream.ui.geom.Point3;
+import org.graphstream.ui.graphicGraph.GraphicElement;
+import org.graphstream.ui.view.util.InteractiveElement;
+import pl.edu.ur.pnes.petriNet.Arc;
 import pl.edu.ur.pnes.petriNet.Net;
+import pl.edu.ur.pnes.petriNet.Node;
 import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.*;
 
 
 public class VisualizerFacade {
-
 
 
     final Visualizer visualizer;
@@ -73,5 +76,29 @@ public class VisualizerFacade {
 
     public void setBackgroundColor(Color color) {
         visualizer.graph.setAttribute("ui.color", color);
+    }
+
+    public void setNodePosition(Node node, Point3 point3) {
+        visualizer.setNodePosition(node, point3);
+    }
+
+    public Optional<GraphicElement> findGraphicElementAt(double x, double y, EnumSet<InteractiveElement> elementType) {
+        return visualizer.findGraphicElementAt(x, y, elementType);
+    }
+
+    public Optional<GraphicElement> findGraphicElementAt(double x, double y) {
+        return visualizer.findGraphicElementAt(x, y);
+    }
+
+    public void addNodeToNet(Node node) {
+        visualizer.addNodeToNet(node);
+    }
+
+    public void addArcToNet(Arc arc) {
+        visualizer.addArcToNet(arc);
+    }
+
+    public Point3 mousePositionToGraphPosition(Point3 mousePoint) {
+        return visualizer.mousePositionToGraphPosition(mousePoint);
     }
 }
