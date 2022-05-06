@@ -26,6 +26,7 @@ import org.graphstream.ui.spriteManager.Sprite;
 import org.graphstream.ui.spriteManager.SpriteManager;
 import org.graphstream.ui.view.camera.Camera;
 import pl.edu.ur.pnes.petriNet.*;
+import pl.edu.ur.pnes.petriNet.visualizer.events.VGVLEvent;
 
 import java.util.*;
 
@@ -57,9 +58,10 @@ class Visualizer {
     private final Map<Arc, Sprite> arcIdSpriteMap = new HashMap<>();
     private final Map<Arc, Sprite> arcWeightSpriteMap = new HashMap<>();
 
-    private final VisualizerGraphViewerListener viewerListener;
+    private final VisualizerGraphViewerListener visualizerGraphViewerListener;
     private boolean loop = true;
     private Net net;
+    private List<BooleanProperty> THIS_IS_MAGIC_DO_NOT_TOUCH_ME = new ArrayList<>();
 
     {
         zoomFactor = new SimpleDoubleProperty(1) {
@@ -101,7 +103,17 @@ class Visualizer {
         this.viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
         this.view = (FxViewPanel) viewer.addView(FxViewer.DEFAULT_VIEW_ID, renderer);
 
-        this.viewerListener = new VisualizerGraphViewerListener(viewer);
+        this.visualizerGraphViewerListener = new VisualizerGraphViewerListener(viewer);
+
+
+        // EXAMPLE VGVL EVENT HANDLER
+        visualizerGraphViewerListener.addEventHandler(VGVLEvent.NODE_CLICKED, event -> {
+            System.out.println("Node Clicked! (handler) #" + event.getClickedNodeId());
+        });
+        // EXAMPLE VGVL EVENT FILTER
+        visualizerGraphViewerListener.addEventFilter(VGVLEvent.NODE_CLICKED, event -> {
+            System.out.println("Node Clicked! (filter) #" + event.getClickedNodeId());
+        });
 
         view.getCamera().setGraphViewport(0, 0, 100, 100);
 
@@ -321,7 +333,9 @@ class Visualizer {
                 logger.debug("New value for sprite {}: {}", tokensSprite.getId(), newVal);
                 tokensSprite.setAttribute("ui.label", newVal);
             });
-//            showSpriteConditionally(tokensSprite, ((Place) node).tokensProperty().isNotEqualTo(0));
+
+            showSpriteConditionally(tokensSprite, ((Place) node).tokensProperty().isNotEqualTo(0));
+
             placeTokensSpriteMap.put((Place) node, tokensSprite);
         }
     }
@@ -391,6 +405,11 @@ class Visualizer {
     }
 
     private void showSpriteConditionally(Sprite sprite, ObservableBooleanValue shownCondition) {
+
+        final SimpleBooleanProperty property = new SimpleBooleanProperty();
+        this.THIS_IS_MAGIC_DO_NOT_TOUCH_ME.add(property);
+        property.bind(shownCondition);
+
         // Create changes listener
         final ChangeListener<Boolean> changeListener = (observableValue, oldVal, newVal) -> {
             if (newVal)
@@ -403,15 +422,15 @@ class Visualizer {
 
             if (newVal)
                 // If it needs to be shown, remove all .hidden classes
-                sprite.setAttribute("ui.class", ((String) sprite.getAttribute("ui.class")).replaceAll(", hide", ""));
+                sprite.setAttribute("ui.class", ((String) sprite.getAttribute("ui.class")).replaceAll("hide, ", ""));
 
             else
                 // Else, add .hide class
-                sprite.setAttribute("ui.class", sprite.getAttribute("ui.class") + ", hide");
+                sprite.setAttribute("ui.class", "hide, " + sprite.getAttribute("ui.class"));
         };
 
         // Attach the listener
-        shownCondition.addListener(changeListener);
+        property.addListener(changeListener);
 
         // Fire it once to set initial class
         changeListener.changed(shownCondition, !shownCondition.get(), shownCondition.get());
