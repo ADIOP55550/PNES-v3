@@ -24,6 +24,11 @@ _TODO_
 - [Model 3D CAD Mindstorms EV3 2](https://grabcad.com/library/lego-mindstorms-ev3-robot-tomy-1)
 - [Porównanie i rozważania dot. systemów dokowania okien w JavaFX](https://github.com/DaveJarvis/PitchDockFX#requirements)
 - [Różnica między 'package' i 'module' w javie](https://docs.oracle.com/javase/specs/jls/se9/html/jls-7.html)
+- [O grafach i algorytmach ich układu](https://www.baeldung.com/cs/graph-auto-layout-algorithm)
+- [Tworzenie horyzontalnego układu grafu](https://crinkles.io/writing/auto-graph-layout-algorithm)
+- [Graphdrawing.org - a collection of resources mostly related to the annual International Symposium on Graph Drawing and Network Visualization](http://graphdrawing.org/index.html)
+- [PDF o rysowaniu grafów (107 stron)](https://cs.brown.edu/people/rtamassi/papers/gd-tutorial/gd-constraints.pdf)
+
 
 ## Instalacja i uruchomienie
 

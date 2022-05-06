@@ -1,6 +1,7 @@
-package pl.edu.ur.pnes;
+package pl.edu.ur.pnes.ui;
 
-import pl.edu.ur.pnes.panels.CustomPanel;
+import pl.edu.ur.pnes.MainApp;
+import pl.edu.ur.pnes.ui.panels.CustomPanel;
 
 import java.io.IOException;
 

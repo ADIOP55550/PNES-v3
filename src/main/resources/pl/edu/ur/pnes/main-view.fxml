@@ -12,74 +12,83 @@
 <?import javafx.scene.layout.VBox?>
 
 <?import com.panemu.tiwulfx.control.dock.DetachableTabPane?>
-<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.edu.ur.pnes.MainController">
-   <top>
-      <VBox BorderPane.alignment="CENTER">
-         <children>
-            <MenuBar>
-              <menus>
-                <Menu mnemonicParsing="false" text="File">
-                  <items>
-                    <MenuItem mnemonicParsing="false" text="Close" />
-                  </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Edit">
-                  <items>
-                    <MenuItem mnemonicParsing="false" text="Delete" />
-                  </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Help">
-                  <items>
-                    <MenuItem mnemonicParsing="false" text="About" />
-                  </items>
-                </Menu>
-              </menus>
-            </MenuBar>
-            <HBox fx:id="mainToolbar" spacing="5.0">
-               <children>
-                  <HBox fx:id="mainToolbarLeft" spacing="5.0">
-                     <children>
-                      <Button mnemonicParsing="false" text="Button" />
-                        <Button mnemonicParsing="false" text="Button" />
-                        <Button mnemonicParsing="false" text="Button" />
-                        <Button mnemonicParsing="false" text="Button" />
-                     </children>
-                  </HBox>
-                  <Pane prefHeight="1.0" prefWidth="100.0" HBox.hgrow="ALWAYS" />
-                  <HBox fx:id="mainToolbarRight" spacing="5.0">
-                     <children>
-                        <Button mnemonicParsing="false" text="Button" />
-                        <Button mnemonicParsing="false" text="Button" />
-                     </children>
-                  </HBox>
-               </children>
-               <padding>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </padding>
-            </HBox>
-         </children>
-      </VBox>
-   </top>
-   <center>
-      <SplitPane dividerPositions="0.18699186991869918, 0.7626016260162601" prefHeight="372.0" prefWidth="790.0" BorderPane.alignment="CENTER">
-         <items>
-             <!--    <padding>-->
-             <!--        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />-->
-             <!--    </padding>-->
-             <SplitPane>
-                 <DetachableTabPane fx:id="leftTabPane" />
-             </SplitPane>
-            <VBox>
-               <children>
-                   <SplitPane VBox.vgrow="ALWAYS">
-                       <DetachableTabPane fx:id="centerTabPane" tabClosingPolicy="ALL_TABS" />
-                   </SplitPane>
-               </children>
-            </VBox>
-             <SplitPane>
-                 <DetachableTabPane fx:id="rightTabPane" />
-             </SplitPane>
-         </items>
-      </SplitPane>
-   </center>
+
+<?import pl.edu.ur.pnes.ui.controls.Icon?>
+<?import javafx.scene.control.Label?>
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="pl.edu.ur.pnes.MainController">
+
+    <top>
+        <VBox BorderPane.alignment="CENTER">
+            <children>
+                <MenuBar>
+                    <menus>
+                        <Menu mnemonicParsing="false" text="File">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="Close"/>
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Edit">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="Delete"/>
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Help">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="About"/>
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+                <HBox fx:id="mainToolbar" spacing="5.0">
+                    <children>
+                        <HBox fx:id="mainToolbarLeft" spacing="5.0">
+                            <children>
+                                <Button mnemonicParsing="false" text="Button"/>
+                                <Button mnemonicParsing="false" text="Button"/>
+                                <Button mnemonicParsing="false" styleClass="icon" text="&#xE806;"/>
+                                <Icon text="&#xE806;"/>
+
+
+                                <Button mnemonicParsing="false" text="s"/>
+                            </children>
+                        </HBox>
+                        <Pane prefHeight="1.0" prefWidth="100.0" HBox.hgrow="ALWAYS"/>
+                        <HBox fx:id="mainToolbarRight" spacing="5.0">
+                            <children>
+                                <Button mnemonicParsing="false" text="Button"/>
+                                <Button mnemonicParsing="false" text="Button"/>
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                    </padding>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+    <center>
+        <SplitPane dividerPositions="0.18699186991869918, 0.7626016260162601" prefHeight="372.0" prefWidth="790.0"
+                   BorderPane.alignment="CENTER">
+            <items>
+                <!--    <padding>-->
+                <!--        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />-->
+                <!--    </padding>-->
+                <SplitPane>
+                    <DetachableTabPane fx:id="leftTabPane"/>
+                </SplitPane>
+                <VBox>
+                    <children>
+                        <SplitPane VBox.vgrow="ALWAYS">
+                            <DetachableTabPane fx:id="centerTabPane" tabClosingPolicy="ALL_TABS"/>
+                        </SplitPane>
+                    </children>
+                </VBox>
+                <SplitPane>
+                    <DetachableTabPane fx:id="rightTabPane"/>
+                </SplitPane>
+            </items>
+        </SplitPane>
+    </center>
 </BorderPane>
