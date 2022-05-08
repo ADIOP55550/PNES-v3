@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import org.graphstream.graph.Graph;
 import pl.edu.ur.pnes.petriNet.Net;
 import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
 
@@ -18,6 +19,11 @@ public class VisualizerFacade {
 
 
     final Visualizer visualizer;
+
+    public Graph getGraph() {
+        return visualizer.graph;
+    }
+
     private final HashMap<EventType<? extends VisualizerEvent>, List<EventHandler<? extends VisualizerEvent>>> handlers = new HashMap<>();
     private final HashMap<EventType<? extends VisualizerEvent>, List<EventHandler<? extends VisualizerEvent>>> filters = new HashMap<>();
 

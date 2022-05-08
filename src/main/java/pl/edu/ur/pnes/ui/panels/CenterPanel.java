@@ -12,6 +12,8 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import pl.edu.ur.pnes.editor.Session;
+import pl.edu.ur.pnes.editor.actions.MoveNodeAction;
 import pl.edu.ur.pnes.petriNet.Arc;
 import pl.edu.ur.pnes.petriNet.PetriNet;
 import pl.edu.ur.pnes.petriNet.Place;
@@ -25,6 +27,8 @@ import pl.edu.ur.pnes.ui.EditorMode;
 import java.awt.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import static pl.edu.ur.pnes.petriNet.visualizer.events.NodesMovedEvent.NODES_MOVED_EVENT;
 
 public class CenterPanel extends CustomPanel {
     @FXML
@@ -55,6 +59,9 @@ public class CenterPanel extends CustomPanel {
 
 
     ObjectProperty<EditorMode> editorMode = new SimpleObjectProperty<>(EditorMode.EDIT);
+
+    public static Session session = new Session();
+
 
 
     public void initialize() {
@@ -112,10 +119,13 @@ public class CenterPanel extends CustomPanel {
 
         net.addElements(place1, place2, place3, place4, transition1, transition2, transition3, arc1, arc2, arc3, arc4, arc5, arc6, arc7, arc8);
 
-
         this.visualizerFacade = new VisualizerFactory().create(graphPane, "/css/petri-net-graph.css");
         this.simulatorFacade = SimulatorFactory.create(net);
         visualizerFacade.visualizeNet(net);
+
+        visualizerFacade.addEventHandler(NODES_MOVED_EVENT, event -> {
+            session.undoHistory.push(new MoveNodeAction(visualizerFacade, event.nodes, event.offset));
+        });
 
 
         centerToolbarLeft.getChildren().add(layoutButton);
