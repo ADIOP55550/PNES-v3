@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pl.edu.ur.pnes.petriNet.Transition;
 
-
 import java.util.function.DoubleConsumer;
 
 public class SimulatorFacade {
@@ -32,7 +31,7 @@ public class SimulatorFacade {
     private final double waitTime = Math.round(1000 / 30.0);
     public final DoubleBinding partCount = autoStepWaitDuration.divide(waitTime);
     private int stepCooldownCounter = (int) Math.floor(partCount.get());
-    private final DoubleBinding autoStepDurationPartTime = autoStepWaitDuration.divide(partCount.get());
+    private final DoubleBinding autoStepDurationPartTime = autoStepWaitDuration.divide(partCount);
     private DoubleConsumer progressCallback = __ -> {
     };
     private final ObjectProperty<AutoStepState> autoStepState = new SimpleObjectProperty<>(AutoStepState.STOPPED);
@@ -67,9 +66,7 @@ public class SimulatorFacade {
 
     SimulatorFacade(Simulator simulator) {
         this.simulator = simulator;
-        autoStepWaitDuration.addListener((observable, oldValue, newValue) -> {
-            stepCooldownCounter = (int) Math.floor(partCount.get());
-        });
+        autoStepWaitDuration.addListener((observable, oldValue, newValue) -> stepCooldownCounter = (int) Math.floor(partCount.get()));
     }
 
     private void restoreLastSnapshotIfPossible() {
@@ -169,8 +166,10 @@ public class SimulatorFacade {
         if (autoStepState.getValue() == AutoStepState.PAUSED || autoStepState.getValue() == AutoStepState.STOPPED) {
             // Create snapshot when starting new simulation
             if (getAutoStepState() == AutoStepState.STOPPED) {
+                // first step
                 restoreLastSnapshotIfPossible();
                 this.lastSnapshot = this.simulator.getSnapshot();
+                simulator.calculateTransitionsThatCanBeActivated();
             }
 
             autoStepWaitDuration.set(duration);
@@ -230,6 +229,14 @@ public class SimulatorFacade {
                 fullStepIndicator();
                 return;
             }
+
+            if (autoStepState.getValue() == AutoStepState.STOPPED) {
+                // first step, calculate possible transitions and exit
+                simulator.calculateTransitionsThatCanBeActivated();
+                setAutoStepState(AutoStepState.PAUSED);
+                return;
+            }
+
             simulator.automaticStep();
         }
     }

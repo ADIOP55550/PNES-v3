@@ -1,25 +1,6 @@
 graph{
     fill-mode: plain;
-}
-
-graph.edit{
-    fill-mode: plain;
-    fill-color: #f5deb3;
-}
-
-graph.run{
-    fill-mode: plain;
-    fill-color: #87cefa;
-}
-
-graph.addtokens{
-    fill-mode: plain;
-    fill-color: #98fb98;
-}
-
-graph.removetokens{
-    fill-mode: plain;
-    fill-color: #f08080;
+    fill-color: rgb(220,220,220);
 }
 
 edge {
@@ -32,8 +13,8 @@ edge:selected {
 }
 
 node {
-    shape: triangle;
-    fill-color: red;
+    shape: cross;
+    fill-color: #f07575;
     stroke-color: black;
 }
 
@@ -60,7 +41,7 @@ sprite.tokens {
 
 node.place {
     shape: circle;
-    fill-color: blue;
+    fill-color: #1e7290;
     stroke-color: black;
 }
 
@@ -76,6 +57,14 @@ node.activated {
 
 node.ready {
     fill-color: lightgreen;
+}
+
+node.goodHover {
+    fill-color: #2b842b;
+}
+
+node.badHover {
+    fill-color: #ff0000;
 }
 
 node.active {

@@ -1,4 +1,4 @@
-package pl.edu.ur.pnes.petriNet.visualizer.events;
+package pl.edu.ur.pnes.events;
 
 
 import javafx.event.Event;
