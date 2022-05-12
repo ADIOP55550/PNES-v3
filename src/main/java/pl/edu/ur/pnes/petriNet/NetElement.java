@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Objects;
 
 public abstract class NetElement {
@@ -39,7 +38,18 @@ public abstract class NetElement {
             super.set(newName);
         }
     };
+
+    /**
+     * Indicates that this Element needs to be redrawn
+     */
     public final BooleanProperty needsRedraw = new SimpleBooleanProperty(false);
+
+    /**
+     * List of ui.class values that should be added to this Element
+     * On change, causes redraw
+     *
+     * @pnes.CausesRedraw
+     */
     final ObservableList<String> classesList = FXCollections.observableArrayList();
 
     NetElement(Net net) {
@@ -66,7 +76,7 @@ public abstract class NetElement {
     public String getId() {
         return id;
     }
-    
+
     public String getName() {
         return name.get();
     }
@@ -102,7 +112,7 @@ public abstract class NetElement {
      *
      * @return List of classes that should be applied to the element
      */
-    public List<String> getClasses() {
+    public ObservableList<String> getClasses() {
         return classesList;
     }
 }
