@@ -9,6 +9,7 @@ module pl.edu.ur.pnes {
 //    requires gs.algo;
     requires gs.core;
     requires org.apache.logging.log4j;
+    requires org.jetbrains.annotations;
 
 
     opens pl.edu.ur.pnes to javafx.fxml;

@@ -1,16 +1,19 @@
 package pl.edu.ur.pnes.petriNet.visualizer.events.mouse;
 
+/**
+ * Occurs when mouse exits a Node
+ */
 public class VisualizerMouseNodeOutEvent extends VisualizerMouseEvent {
 
-    public String getClickedNodeId() {
-        return clickedNodeId;
+    public String getNodeId() {
+        return nodeId;
     }
 
-    private final String clickedNodeId;
+    private final String nodeId;
 
 
-    public VisualizerMouseNodeOutEvent(String clickedNodeId) {
+    public VisualizerMouseNodeOutEvent(String nodeId) {
         super(MOUSE_NODE_OUT);
-        this.clickedNodeId = clickedNodeId;
+        this.nodeId = nodeId;
     }
 }

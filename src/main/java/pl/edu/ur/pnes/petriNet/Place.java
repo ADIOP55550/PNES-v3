@@ -2,10 +2,12 @@ package pl.edu.ur.pnes.petriNet;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class Place extends Node {
     private static int placeCounter = 0;
@@ -38,8 +40,8 @@ public class Place extends Node {
 
 
     @Override
-    public List<String> getClasses() {
-        return List.of("place");
+    public ObservableList<String> getClasses() {
+        return FXCollections.observableArrayList("place");
     }
 
     public double getTokens() {
@@ -66,4 +68,11 @@ public class Place extends Node {
         this.capacity.set(capacity);
     }
 
+    public boolean canBeConnectedTo(Node other) {
+        return !(
+                (Objects.equals(this, other))
+                        || other instanceof Place
+                        || this.outputs.keySet().stream().anyMatch(v -> Objects.equals(v, other))
+        );
+    }
 }

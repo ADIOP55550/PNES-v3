@@ -4,9 +4,13 @@ import javafx.event.Event;
 import javafx.event.EventDispatchChain;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.graphstream.ui.geom.Point3;
+import org.jetbrains.annotations.NotNull;
 import pl.edu.ur.pnes.petriNet.events.NetElementAddedEvent;
 import pl.edu.ur.pnes.petriNet.events.NetElementRemovedEvent;
+import pl.edu.ur.pnes.petriNet.events.NetEvent;
 import pl.edu.ur.pnes.petriNet.events.NetEventsHandler;
 import pl.edu.ur.pnes.petriNet.simulator.Rules;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
@@ -18,6 +22,7 @@ import java.util.stream.Stream;
 public abstract class Net {
     SimulatorFacade netSimulator;
     VisualizerFacade netVisualizer;
+    private static final Logger logger = LogManager.getLogger(Net.class);
 
     int lastId = 0;
 
@@ -35,6 +40,12 @@ public abstract class Net {
 
 
     NetEventsHandler internalEventsHandler = new NetEventsHandler();
+
+    {
+        internalEventsHandler.addEventFilter(NetEvent.ANY, event -> {
+            logger.debug("NET EVENT: {}", event.getEventType().getName());
+        });
+    }
 
     public List<Arc> getArcs() {
         return arcs;
@@ -77,7 +88,7 @@ public abstract class Net {
         Arrays.stream(elements).forEachOrdered(this::addElement);
     }
 
-    public void addElement(Node element, Point3 position) {
+    public void addElement(Node element, @NotNull Point3 position) {
         element.setPosition(position);
         addElement(element);
     }
@@ -110,16 +121,18 @@ public abstract class Net {
             }
 
 
+            this.internalEventsHandler.fireEvent(new NetElementAddedEvent(element));
             return;
         }
         if (element instanceof Place) {
             places.add((Place) element);
+            this.internalEventsHandler.fireEvent(new NetElementAddedEvent(element));
             return;
         }
         if (element instanceof Transition) {
             transitions.add((Transition) element);
+            this.internalEventsHandler.fireEvent(new NetElementAddedEvent(element));
         }
-        this.internalEventsHandler.fireEvent(new NetElementAddedEvent(element));
     }
 
     public void removeElement(NetElement element) {
@@ -176,5 +189,22 @@ public abstract class Net {
 
     public void fireEvent(Event event) {
         internalEventsHandler.fireEvent(event);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Net net)) return false;
+        return lastId == net.lastId && usedNames.equals(net.usedNames) && activationRule == net.activationRule && getArcs().equals(net.getArcs()) && getPlaces().equals(net.getPlaces()) && getTransitions().equals(net.getTransitions());
+    }
+
+    /**
+     * Calculates Net hash based on the {@link #lastId} and lengths of {@link #places} {@link #transitions} and {@link #arcs}
+     *
+     * @return hash code of the net
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(lastId, getArcs().size(), getPlaces().size(), getTransitions().size());
     }
 }

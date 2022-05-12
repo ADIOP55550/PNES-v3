@@ -14,7 +14,6 @@ import java.util.function.DoubleBinaryOperator;
 
 class Simulator {
 
-    private boolean firstStep = true;
     private final Random r = new Random();
 
     final Net net;
@@ -78,12 +77,6 @@ class Simulator {
         this.logger.info("automatic step fired");
 
         if (this.checkIfDone()) return;
-
-        if (this.firstStep) {
-            this.firstStep = false;
-            System.out.println("firstStep");
-            return;
-        }
 
         this.logger.debug("Can activate {} transitions", this.transitionsThatCanBeActivated.size());
 
