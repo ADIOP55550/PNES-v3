@@ -1,4 +1,4 @@
-package pl.edu.ur.pnes.petriNet.visualizer.events;
+package pl.edu.ur.pnes.events;
 
 
 import java.util.HashMap;
@@ -23,8 +23,7 @@ public class EventHandlerManager extends BasicEventDispatcher {
         this.eventSource = eventSource;
 
         eventHandlerMap =
-                new HashMap<EventType<? extends Event>,
-                            CompositeEventHandler<? extends Event>>();
+                new HashMap<>();
     }
 
     /**
@@ -132,7 +131,7 @@ public class EventHandlerManager extends BasicEventDispatcher {
             if (eventHandler == null) {
                 return;
             }
-            compositeEventHandler = new CompositeEventHandler<T>();
+            compositeEventHandler = new CompositeEventHandler<>();
             eventHandlerMap.put(eventType, compositeEventHandler);
         }
 
@@ -176,7 +175,7 @@ public class EventHandlerManager extends BasicEventDispatcher {
         CompositeEventHandler<T> compositeEventHandler =
                 (CompositeEventHandler<T>) eventHandlerMap.get(eventType);
         if (compositeEventHandler == null) {
-            compositeEventHandler = new CompositeEventHandler<T>();
+            compositeEventHandler = new CompositeEventHandler<>();
             eventHandlerMap.put(eventType, compositeEventHandler);
         }
 

@@ -1,6 +1,13 @@
 package pl.edu.ur.pnes.petriNet;
 
+import javafx.event.Event;
+import javafx.event.EventDispatchChain;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
 import org.graphstream.ui.geom.Point3;
+import pl.edu.ur.pnes.petriNet.events.NetElementAddedEvent;
+import pl.edu.ur.pnes.petriNet.events.NetElementRemovedEvent;
+import pl.edu.ur.pnes.petriNet.events.NetEventsHandler;
 import pl.edu.ur.pnes.petriNet.simulator.Rules;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
 import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;
@@ -8,7 +15,7 @@ import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;
 import java.util.*;
 import java.util.stream.Stream;
 
-public abstract class Net{
+public abstract class Net {
     SimulatorFacade netSimulator;
     VisualizerFacade netVisualizer;
 
@@ -25,6 +32,9 @@ public abstract class Net{
     List<Arc> arcs = new ArrayList<>();
     List<Place> places = new ArrayList<>();
     List<Transition> transitions = new ArrayList<>();
+
+
+    NetEventsHandler internalEventsHandler = new NetEventsHandler();
 
     public List<Arc> getArcs() {
         return arcs;
@@ -55,6 +65,10 @@ public abstract class Net{
         );
     }
 
+    public NetEventsHandler getInternalEventsHandler() {
+        return internalEventsHandler;
+    }
+
     public void addElements(Collection<NetElement> elements) {
         elements.forEach(this::addElement);
     }
@@ -63,9 +77,13 @@ public abstract class Net{
         Arrays.stream(elements).forEachOrdered(this::addElement);
     }
 
+    public void addElement(Node element, Point3 position) {
+        element.setPosition(position);
+        addElement(element);
+    }
+
     public void addElement(NetElement element) {
-        if (element instanceof Arc) {
-            Arc arc = (Arc) element;
+        if (element instanceof Arc arc) {
             arcs.add(arc);
 
             if (arc.input == null || arc.output == null)
@@ -101,6 +119,25 @@ public abstract class Net{
         if (element instanceof Transition) {
             transitions.add((Transition) element);
         }
+        this.internalEventsHandler.fireEvent(new NetElementAddedEvent(element));
+    }
+
+    public void removeElement(NetElement element) {
+        if (this.allElementsStream().anyMatch(v -> Objects.equals(v, element))) {
+            if (element instanceof Place) {
+                places.remove(element);
+                ((Place) element).inputs.forEach((transition, arc) -> this.removeElement(arc));
+                ((Place) element).outputs.forEach((transition, arc) -> this.removeElement(arc));
+            }
+            if (element instanceof Transition) {
+                transitions.remove(element);
+                ((Transition) element).inputs.forEach((transition, arc) -> this.removeElement(arc));
+                ((Transition) element).outputs.forEach((transition, arc) -> this.removeElement(arc));
+            }
+            if (element instanceof Arc)
+                arcs.remove(element);
+            this.internalEventsHandler.fireEvent(new NetElementRemovedEvent(element));
+        }
     }
 
 
@@ -111,5 +148,33 @@ public abstract class Net{
 
     public Optional<NetElement> getElementById(String id) {
         return allElementsStream().filter(e -> Objects.equals(e.getId(), id)).findAny();
+    }
+
+    public <T extends Event> void addEventHandler(EventType<T> eventType, EventHandler<? super T> eventHandler) {
+        internalEventsHandler.addEventHandler(eventType, eventHandler);
+    }
+
+    public <T extends Event> void removeEventHandler(EventType<T> eventType, EventHandler<? super T> eventHandler) {
+        internalEventsHandler.removeEventHandler(eventType, eventHandler);
+    }
+
+    public <T extends Event> void addEventFilter(EventType<T> eventType, EventHandler<? super T> eventFilter) {
+        internalEventsHandler.addEventFilter(eventType, eventFilter);
+    }
+
+    public <T extends Event> void removeEventFilter(EventType<T> eventType, EventHandler<? super T> eventFilter) {
+        internalEventsHandler.removeEventFilter(eventType, eventFilter);
+    }
+
+    public <T extends Event> void setEventHandler(EventType<T> eventType, EventHandler<? super T> eventHandler) {
+        internalEventsHandler.setEventHandler(eventType, eventHandler);
+    }
+
+    public EventDispatchChain buildEventDispatchChain(EventDispatchChain tail) {
+        return internalEventsHandler.buildEventDispatchChain(tail);
+    }
+
+    public void fireEvent(Event event) {
+        internalEventsHandler.fireEvent(event);
     }
 }

@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pl.edu.ur.pnes.petriNet.Transition;
 
-
 import java.util.function.DoubleConsumer;
 
 public class SimulatorFacade {
@@ -67,9 +66,7 @@ public class SimulatorFacade {
 
     SimulatorFacade(Simulator simulator) {
         this.simulator = simulator;
-        autoStepWaitDuration.addListener((observable, oldValue, newValue) -> {
-            stepCooldownCounter = (int) Math.floor(partCount.get());
-        });
+        autoStepWaitDuration.addListener((observable, oldValue, newValue) -> stepCooldownCounter = (int) Math.floor(partCount.get()));
     }
 
     private void restoreLastSnapshotIfPossible() {
@@ -231,6 +228,7 @@ public class SimulatorFacade {
                 return;
             }
             simulator.automaticStep();
+            setAutoStepState(AutoStepState.PAUSED);
         }
     }
 

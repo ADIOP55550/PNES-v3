@@ -50,6 +50,7 @@ public class CenterPanel extends CustomPanel {
     private final Button addPlaceButton = new Button("Place");
     private final Button addTransitionButton = new Button("Transition");
     private final Button addArcButton = new Button("Arc");
+    private final Button psabutton = new Button("PrintSelNodes");
     private final Button toggleModeButton = new Button("RUN mode 🏁");
 
     private final double MIN_SLIDER_DURATION = 100;
@@ -140,7 +141,7 @@ public class CenterPanel extends CustomPanel {
 
         progressCircle.setProgress(0);
 
-        centerToolbarLeft.getChildren().addAll(toggleModeButton);
+        centerToolbarLeft.getChildren().addAll(toggleModeButton, psabutton);
         centerToolbarRight.getChildren().addAll(speedSlider, progressCircle, stepButton, playPauseButton, stopButton, addArcButton, addPlaceButton, addTransitionButton);
 
         simulatorFacade.setProgressCallback(value -> Platform.runLater(() -> progressCircle.setProgress(value)));
@@ -177,33 +178,36 @@ public class CenterPanel extends CustomPanel {
                 Place place = new Place(net);
                 Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
                 net.addElement(place);
-                visualizerFacade.addNodeToNet(place);
-                visualizerFacade.setNodePosition(place, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+                Platform.runLater(() -> visualizerFacade.setNodePosition(place, visualizerFacade.mousePositionToGraphPosition(mousePoint)));
                 graphPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
             };
             graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
         });
 
         /*
-        * Add new Transition on mouse point
-        */
+         * Add new Transition on mouse point
+         */
         addTransitionButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.RUN));
         addTransitionButton.setOnAction(ActionEvent -> {
             this.mouseEventEventHandler = mouseEvent -> {
                 Transition transition = new Transition(net);
                 Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
                 net.addElement(transition);
-                visualizerFacade.addNodeToNet(transition);
-                visualizerFacade.setNodePosition(transition, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+                Platform.runLater(() -> visualizerFacade.setNodePosition(transition, visualizerFacade.mousePositionToGraphPosition(mousePoint)));
                 graphPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
             };
             graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
         });
 
+        psabutton.setOnAction(event -> {
+            visualizerFacade.printSelectedNodes();
+        });
+
+
         /*
-        * Set new Arc
-        * If button is pressed, choose your first and second node to create arc
-        */
+         * Set new Arc
+         * If button is pressed, choose your first and second node to create arc
+         */
         addArcButton.setOnAction(ActiveEvent -> {
             var ref = new Object() {
                 Node inputNode = null;
@@ -220,7 +224,6 @@ public class CenterPanel extends CustomPanel {
 
                     Arc arc = new Arc(net, ref.inputNode, ref.outputNode);
                     net.addElement(arc);
-                    visualizerFacade.addArcToNet(arc);
                     graphPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
                 } else {
                     Point3 position = visualizerFacade.mousePositionToGraphPosition(new Point3(mouseEvent.getX(), mouseEvent.getY(), 0));

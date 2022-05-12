@@ -7,6 +7,10 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
+import javafx.event.Event;
+import javafx.event.EventDispatchChain;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -28,7 +32,8 @@ import org.graphstream.ui.spriteManager.SpriteManager;
 import org.graphstream.ui.view.camera.Camera;
 import org.graphstream.ui.view.util.InteractiveElement;
 import pl.edu.ur.pnes.petriNet.*;
-import pl.edu.ur.pnes.petriNet.visualizer.events.VGVLEvent;
+import pl.edu.ur.pnes.petriNet.events.NetEvent;
+import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
 
 import java.util.*;
 
@@ -60,7 +65,12 @@ class Visualizer {
     private final Map<Arc, Sprite> arcIdSpriteMap = new HashMap<>();
     private final Map<Arc, Sprite> arcWeightSpriteMap = new HashMap<>();
 
-    private final VisualizerGraphViewerListener visualizerGraphViewerListener;
+    VisualizerEventsHandler getVisualizerEventsHandler() {
+        return visualizerEventsHandler;
+    }
+
+    private final VisualizerEventsHandler visualizerEventsHandler = new VisualizerEventsHandler();
+
     private boolean loop = true;
     private Net net;
     private List<BooleanProperty> THIS_IS_MAGIC_DO_NOT_TOUCH_ME = new ArrayList<>();
@@ -105,15 +115,13 @@ class Visualizer {
         this.viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
         this.view = (FxViewPanel) viewer.addView(FxViewer.DEFAULT_VIEW_ID, renderer);
 
-        this.visualizerGraphViewerListener = new VisualizerGraphViewerListener(viewer);
-
 
         // EXAMPLE VGVL EVENT HANDLER
-        visualizerGraphViewerListener.addEventHandler(VGVLEvent.NODE_CLICKED, event -> {
+        this.visualizerEventsHandler.addEventHandler(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
             System.out.println("Node Clicked! (handler) #" + event.getClickedNodeId());
         });
         // EXAMPLE VGVL EVENT FILTER
-        visualizerGraphViewerListener.addEventFilter(VGVLEvent.NODE_CLICKED, event -> {
+        this.visualizerEventsHandler.addEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
             System.out.println("Node Clicked! (filter) #" + event.getClickedNodeId());
         });
 
@@ -289,12 +297,27 @@ class Visualizer {
                 element.needsRedraw.set(false);
         });
 
-        net.getAllNodesStream().forEach(this::addNodeToNet);
+        // hook element added
+        net.addEventHandler(NetEvent.ELEMENT_ADDED, event -> addElementToGraph(event.getElement()));
 
-        net.getArcs().forEach(this::addArcToNet);
+        // hook element removed
+        net.addEventHandler(NetEvent.ELEMENT_REMOVED, event -> removeElementFromGraph(event.getElement()));
+
+        net.getAllNodesStream().forEach(this::addNodeToGraph);
+
+        net.getArcs().forEach(this::addArcToGraph);
     }
 
-    void addNodeToNet(Node node) {
+    void addElementToGraph(NetElement element) {
+        logger.info("Adding element " + element.getName() + " to graph");
+        if (element instanceof Arc)
+            this.addArcToGraph((Arc) element);
+        else if (element instanceof Place || element instanceof Transition)
+            this.addNodeToGraph((Node) element);
+        else throw new IllegalArgumentException("element is not a known NetElement");
+    }
+
+    private void addNodeToGraph(Node node) {
 
         final double sizeX = 1;
         final double sizeY = 0.6;
@@ -342,7 +365,7 @@ class Visualizer {
         }
     }
 
-    void addArcToNet(Arc arc) {
+    private void addArcToGraph(Arc arc) {
         logger.info("Adding arc " + arc.getId() + " (" + arc.input.getId() + "-" + arc.output.getId() + ")");
         Edge graphArc;
         graphArc = graph.addEdge(arc.getId(), arc.input.getId(), arc.output.getId(), true);
@@ -375,6 +398,32 @@ class Visualizer {
 
         showSpriteConditionally(weightSprite, arc.weightProperty().isNotEqualTo(1));
         arcWeightSpriteMap.put(arc, weightSprite);
+    }
+
+    void removeElementFromGraph(NetElement element) {
+        logger.info("Removing element " + element.getName() + " from graph");
+        if (element instanceof Arc)
+            this.removeEdgeFromGraph((Arc) element);
+        else if (element instanceof Place || element instanceof Transition)
+            this.removeNodeFromGraph((Node) element);
+        else throw new IllegalArgumentException("element is not a known NetElement");
+    }
+
+    private void removeNodeFromGraph(Node node) {
+        var graphNode = graph.getNode(node.getId());
+        if (graphNode == null)
+            throw new IllegalArgumentException("Node with id " + node.getId() + " is not in the graph");
+
+        graph.removeNode(graphNode);
+    }
+
+    private void removeEdgeFromGraph(Arc arc) {
+        var graphEdge = graph.getEdge(arc.getId());
+        if (graphEdge == null)
+            throw new IllegalArgumentException("Edge with id " + arc.getId() + " is not in the graph");
+
+        graph.removeEdge(graphEdge);
+
     }
 
     private Sprite getAttachedTextSprite(NetElement element, String idAppendix, Point3 offset, String initialValue) {
