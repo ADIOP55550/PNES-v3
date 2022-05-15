@@ -22,13 +22,13 @@ import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFactory;
 import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;
 import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFactory;
+import pl.edu.ur.pnes.petriNet.visualizer.events.VGVLEvent;
+import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
 import pl.edu.ur.pnes.ui.EditorMode;
 
 import java.awt.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
-import static pl.edu.ur.pnes.petriNet.visualizer.events.NodesMovedEvent.NODES_MOVED_EVENT;
 
 public class CenterPanel extends CustomPanel {
     @FXML
@@ -60,7 +60,7 @@ public class CenterPanel extends CustomPanel {
 
     ObjectProperty<EditorMode> editorMode = new SimpleObjectProperty<>(EditorMode.EDIT);
 
-    public static Session session = new Session();
+    public Session session = new Session();
 
 
 
@@ -123,8 +123,9 @@ public class CenterPanel extends CustomPanel {
         this.simulatorFacade = SimulatorFactory.create(net);
         visualizerFacade.visualizeNet(net);
 
-        visualizerFacade.addEventHandler(NODES_MOVED_EVENT, event -> {
-            session.undoHistory.push(new MoveNodeAction(visualizerFacade, event.nodes, event.offset));
+        // TODO: Probably there should be VisualizerEvent instead VGVLEvent, but it wasn't my responsibility to prepare those....
+        visualizerFacade.addEventHandler(VGVLEvent.NODES_MOVED_EVENT, event -> {
+            session.undoHistory.push(new MoveNodeAction(visualizerFacade, event.nodesIds, event.offset));
         });
 
 

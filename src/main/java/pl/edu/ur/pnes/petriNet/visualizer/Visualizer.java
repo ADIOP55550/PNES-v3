@@ -20,6 +20,7 @@ import org.graphstream.ui.fx_viewer.FxViewPanel;
 import org.graphstream.ui.fx_viewer.FxViewer;
 import org.graphstream.ui.geom.Point2;
 import org.graphstream.ui.geom.Point3;
+import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 import org.graphstream.ui.graphicGraph.stylesheet.StyleConstants;
 import org.graphstream.ui.javafx.FxGraphRenderer;
 import org.graphstream.ui.spriteManager.Sprite;
@@ -434,5 +435,12 @@ class Visualizer {
 
         // Fire it once to set initial class
         changeListener.changed(shownCondition, !shownCondition.get(), shownCondition.get());
+    }
+
+    public void setNodePosition(String id, double[] position) {
+        GraphPosLengthUtils.nodePosition(graph, id, position);
+    }
+    public double[] getNodePosition(String id) {
+        return GraphPosLengthUtils.nodePosition(graph, id);
     }
 }

@@ -22,35 +22,41 @@ public class UndoHistory {
     }
 
     /**
-     * @return Last applied step to undo.
-     * @throws IndexOutOfBoundsException - if there is no step to undo.
+     * @return Last applied step to undo, or null if no such step could be found.
      */
     public Undoable peekUndo() {
         return peekUndo(1);
     }
     /**
      * @param n How many steps behind peek.
-     * @return n-th last applied step to undo.
-     * @throws IndexOutOfBoundsException - if there is not enough steps.
+     * @return n-th last applied step to undo, or null if no such step could be found.
      */
     public Undoable peekUndo(int n) {
-        return steps.get(lastAppliedIndex - n);
+        try {
+            return steps.get(lastAppliedIndex - n);
+        }
+        catch (IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     /**
-     * @return Next step to redo.
-     * @throws IndexOutOfBoundsException - if there is no step to redo.
+     * @return Next step to redo, or null if no such step could be found.
      */
     public Undoable peekRedo() {
         return peekRedo(1);
     }
     /**
      * @param n How many steps forward peek.
-     * @return n-th next (undone) step to redo.
-     * @throws IndexOutOfBoundsException - if there is not enough steps to redo.
+     * @return n-th next (undone) step to redo, or null if no such step could be found.
      */
     public Undoable peekRedo(int n) {
-        return steps.get(lastAppliedIndex + n);
+        try {
+            return steps.get(lastAppliedIndex + n);
+        }
+        catch (IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     /**
@@ -70,10 +76,21 @@ public class UndoHistory {
      * @return True if anything was undo, false if nothing was possible.
      */
     public boolean undo() {
-        if (!steps.isEmpty()) return false;
-
         final var step = peekUndo();
+        if (step == null) return false;
         step.undo();
+        lastAppliedIndex -= 1;
+        return true;
+    }
+
+    /**
+     * Redoes next undone step, following up the history.
+     * @return True if anything was redo, false if nothing was possible.
+     */
+    public boolean redo() {
+        final var step = peekRedo();
+        if (step == null) return false;
+        step.redo();
         lastAppliedIndex -= 1;
         return true;
     }

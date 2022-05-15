@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
+import pl.edu.ur.pnes.editor.Session;
 import pl.edu.ur.pnes.petriNet.Place;
 import pl.edu.ur.pnes.ui.PanelManager;
 import pl.edu.ur.pnes.ui.panels.CenterPanel;
@@ -23,6 +24,11 @@ public class MainApp extends Application {
     public static JMetro mainJMetro = new JMetro(Style.DARK); // Default app style
     public static Stage mainStage;
     public static CenterPanel centerPanel;
+
+    public static Session getSession() {
+        // TODO: get session (associated with focused tab) (assuming multiple sessions (files, nets) could be open at once at some point)
+        return centerPanel.session;
+    }
 
 
     @Override
