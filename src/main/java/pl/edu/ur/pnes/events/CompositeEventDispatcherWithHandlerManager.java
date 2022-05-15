@@ -1,19 +1,20 @@
-package pl.edu.ur.pnes.petriNet.visualizer.events;
+package pl.edu.ur.pnes.events;
 
-public class VGVLEventDispatcher extends CompositeEventDispatcher {
+import javafx.beans.property.ObjectProperty;
 
-
+public class CompositeEventDispatcherWithHandlerManager extends CompositeEventDispatcher {
     public EventHandlerManager getEventHandlerManager() {
         return eventHandlerManager;
     }
 
+
     private final EventHandlerManager eventHandlerManager;
 
-    public VGVLEventDispatcher(final Object eventSource) {
+    public CompositeEventDispatcherWithHandlerManager(final Object eventSource) {
         this(new EventHandlerManager(eventSource));
     }
 
-    public VGVLEventDispatcher(EventHandlerManager eventHandlerManager) {
+    public CompositeEventDispatcherWithHandlerManager(EventHandlerManager eventHandlerManager) {
         this.eventHandlerManager = eventHandlerManager;
     }
 
@@ -26,4 +27,5 @@ public class VGVLEventDispatcher extends CompositeEventDispatcher {
     public BasicEventDispatcher getLastDispatcher() {
         return eventHandlerManager;
     }
+
 }

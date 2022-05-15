@@ -9,16 +9,18 @@ module pl.edu.ur.pnes {
 //    requires gs.algo;
     requires gs.core;
     requires org.apache.logging.log4j;
+    requires org.jetbrains.annotations;
 
 
     opens pl.edu.ur.pnes to javafx.fxml;
+    opens pl.edu.ur.pnes.ui to javafx.fxml;
     exports pl.edu.ur.pnes;
     exports pl.edu.ur.pnes.ui.panels;
     exports pl.edu.ur.pnes.ui;
     exports pl.edu.ur.pnes.ui.controls;
-    opens pl.edu.ur.pnes.ui to javafx.fxml;
     exports pl.edu.ur.pnes.petriNet;
     exports pl.edu.ur.pnes.petriNet.simulator;
+    exports pl.edu.ur.pnes.petriNet.events;
 
 //    exports com.sun.javafx.logging;
 }

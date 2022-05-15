@@ -5,6 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class Transition extends Node {
     private static int transitionCounter = 0;
@@ -59,5 +60,14 @@ public class Transition extends Node {
 
     public void setReady(boolean value) {
         isReady.set(value);
+    }
+
+
+    public boolean canBeConnectedTo(Node other) {
+        return !(
+                (Objects.equals(this, other))
+                        || other instanceof Transition
+                        || this.outputs.keySet().stream().anyMatch(v -> Objects.equals(v, other))
+        );
     }
 }

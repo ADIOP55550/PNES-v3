@@ -14,6 +14,7 @@ import javafx.scene.layout.Pane;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.graphstream.graph.Edge;
+import org.graphstream.graph.EdgeRejectedException;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.ui.fx_viewer.FxViewPanel;
@@ -21,13 +22,16 @@ import org.graphstream.ui.fx_viewer.FxViewer;
 import org.graphstream.ui.geom.Point2;
 import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
+import org.graphstream.ui.graphicGraph.GraphicElement;
 import org.graphstream.ui.graphicGraph.stylesheet.StyleConstants;
 import org.graphstream.ui.javafx.FxGraphRenderer;
 import org.graphstream.ui.spriteManager.Sprite;
 import org.graphstream.ui.spriteManager.SpriteManager;
 import org.graphstream.ui.view.camera.Camera;
+import org.graphstream.ui.view.util.InteractiveElement;
 import pl.edu.ur.pnes.petriNet.*;
-import pl.edu.ur.pnes.petriNet.visualizer.events.VGVLEvent;
+import pl.edu.ur.pnes.petriNet.events.NetEvent;
+import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
 
 import java.util.*;
 
@@ -59,7 +63,12 @@ class Visualizer {
     private final Map<Arc, Sprite> arcIdSpriteMap = new HashMap<>();
     private final Map<Arc, Sprite> arcWeightSpriteMap = new HashMap<>();
 
-    private final VisualizerGraphViewerListener visualizerGraphViewerListener;
+    VisualizerEventsHandler getVisualizerEventsHandler() {
+        return visualizerEventsHandler;
+    }
+
+    private final VisualizerEventsHandler visualizerEventsHandler;
+
     private boolean loop = true;
     private Net net;
     private List<BooleanProperty> THIS_IS_MAGIC_DO_NOT_TOUCH_ME = new ArrayList<>();
@@ -104,15 +113,14 @@ class Visualizer {
         this.viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
         this.view = (FxViewPanel) viewer.addView(FxViewer.DEFAULT_VIEW_ID, renderer);
 
-        this.visualizerGraphViewerListener = new VisualizerGraphViewerListener(viewer);
-
+        visualizerEventsHandler = new VisualizerEventsHandler(viewer);
 
         // EXAMPLE VGVL EVENT HANDLER
-        visualizerGraphViewerListener.addEventHandler(VGVLEvent.NODE_CLICKED, event -> {
+        this.visualizerEventsHandler.addEventHandler(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
             System.out.println("Node Clicked! (handler) #" + event.getClickedNodeId());
         });
         // EXAMPLE VGVL EVENT FILTER
-        visualizerGraphViewerListener.addEventFilter(VGVLEvent.NODE_CLICKED, event -> {
+        this.visualizerEventsHandler.addEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
             System.out.println("Node Clicked! (filter) #" + event.getClickedNodeId());
         });
 
@@ -269,31 +277,62 @@ class Visualizer {
     }
 
     public void visualizeNet(Net net) {
-
-
         this.net = net;
 
-        // hook redraw
-        net.allElementsStream().forEach(element -> {
-            logger.info("Hooking redraw listener to {}", element.getName());
-            element.needsRedraw.addListener((observableValue, oldVal, newVal) -> {
-                logger.info("Needs redraw changed for node {}", element.getName());
-                if (newVal) {
-                    this.redrawElement(element);
-                    element.needsRedraw.set(false);
-                }
-            });
+        // hook element added
+        net.addEventHandler(NetEvent.ELEMENT_ADDED, event -> addElementToGraph(event.getElement()));
+        // hook element removed
+        net.addEventHandler(NetEvent.ELEMENT_REMOVED, event -> removeElementFromGraph(event.getElement()));
 
-            if (element.needsRedraw.get())
-                element.needsRedraw.set(false);
-        });
-
-        net.getAllNodesStream().forEach(this::addNodeToNet);
-
-        net.getArcs().forEach(this::addArcToNet);
+        // add all current elements
+        net.getAllNodesStream().forEach(this::addElementToGraph);
+        net.getArcs().forEach(this::addElementToGraph);
     }
 
-    private void addNodeToNet(Node node) {
+    /**
+     * Add the element to the graph view and hooks into its {@link NetElement#needsRedraw} property
+     *
+     * @param element element to be added
+     * @throws IllegalArgumentException if NetElement is not of supported type ({@link Place} or {@link Transition} or {@link Arc})
+     * @see #addArcToGraph(Arc)
+     * @see #addNodeToGraph(Node)
+     */
+    void addElementToGraph(NetElement element) {
+        logger.info("Adding element " + element.getName() + " to graph");
+
+        // hook redraw
+        logger.info("Hooking redraw listener to {}", element.getName());
+        element.needsRedraw.addListener((observableValue, oldVal, newVal) -> {
+            logger.info("Needs redraw changed for node {}", element.getName());
+            if (newVal) {
+                this.redrawElement(element);
+                element.needsRedraw.set(false);
+            }
+        });
+
+        if (element.needsRedraw.get())
+            element.needsRedraw.set(false);
+
+        if (element instanceof Arc)
+            this.addArcToGraph((Arc) element);
+        else if (element instanceof Place || element instanceof Transition)
+            this.addNodeToGraph((Node) element);
+        else throw new IllegalArgumentException("element is not a known NetElement");
+    }
+
+    /**
+     * Adds given Node to graph.
+     * Sets its position to {@link Node#getPosition()}
+     * Sets its classes to concatenation of {@link Node#getClasses()}
+     * Sets its ui.style based on the class
+     * <p>
+     * Adds listener to the {@link Node#nameProperty()}
+     * If of type {@link Place}, adds listener to the {@link Place#tokensProperty()}
+     * By default, tokens sprite is shown only when tokens value is greater than 0.
+     *
+     * @param node Node to be added
+     */
+    private void addNodeToGraph(Node node) {
 
         final double sizeX = 1;
         final double sizeY = 0.6;
@@ -304,6 +343,8 @@ class Visualizer {
             graphNode.setAttribute("isCircle");
         graphNode.setAttribute("ui.style", "size: " + sizeX + "gu, " + (graphNode.hasAttribute("isCircle") ? sizeX : sizeY) + "gu;");
         graphNode.setAttribute("ui.class", node.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
+
+        graphNode.setAttribute("xyz", node.getPosition().x, node.getPosition().y, node.getPosition().z);
 
         Sprite nameSprite = getAttachedTextSprite(
                 node,
@@ -320,28 +361,41 @@ class Visualizer {
         nodeIdSpriteMap.put(node, nameSprite);
 
         // only Places can display Tokens
-        if (node instanceof Place) {
+        if (node instanceof Place place) {
             Sprite tokensSprite = getAttachedTextSprite(
-                    node,
+                    place,
                     "tokens",
                     Point3.NULL_POINT3,
-                    String.valueOf(((Place) node).getTokens()),
+                    String.valueOf(place.getTokens()),
                     List.of("tokens")
             );
 
             // attach listener for future label changes
-            ((Place) node).tokensProperty().addListener((observableValue, oldVal, newVal) -> {
+            place.tokensProperty().addListener((observableValue, oldVal, newVal) -> {
                 logger.debug("New value for sprite {}: {}", tokensSprite.getId(), newVal);
                 tokensSprite.setAttribute("ui.label", newVal);
             });
 
-            showSpriteConditionally(tokensSprite, ((Place) node).tokensProperty().isNotEqualTo(0));
+            showSpriteConditionally(tokensSprite, place.tokensProperty().isNotEqualTo(0));
 
-            placeTokensSpriteMap.put((Place) node, tokensSprite);
+            placeTokensSpriteMap.put(place, tokensSprite);
         }
     }
 
-    private void addArcToNet(Arc arc) {
+    /**
+     * Adds given Arc to graph.
+     * Sets its input to {@link Arc#input}
+     * Sets its output to {@link Arc#output}
+     * Sets its classes to concatenation of {@link Arc#getClasses()}
+     * <p>
+     * Adds listener to the {@link Arc#nameProperty()}
+     * Adds listener to the {@link Arc#weightProperty()}
+     * By default, weight sprite is shown only when tokens value is other than 1.
+     *
+     * @param arc Arc to be added to the net. Must have {@link Arc#input} and {@link Arc#output} set to valid Nodes
+     * @throws EdgeRejectedException when Edge cannot be created (it may already exist)
+     */
+    private void addArcToGraph(Arc arc) throws EdgeRejectedException {
         logger.info("Adding arc " + arc.getId() + " (" + arc.input.getId() + "-" + arc.output.getId() + ")");
         Edge graphArc;
         graphArc = graph.addEdge(arc.getId(), arc.input.getId(), arc.output.getId(), true);
@@ -374,6 +428,55 @@ class Visualizer {
 
         showSpriteConditionally(weightSprite, arc.weightProperty().isNotEqualTo(1));
         arcWeightSpriteMap.put(arc, weightSprite);
+    }
+
+    /**
+     * Removes given element from graph.
+     *
+     * @param element element to be removed
+     * @throws IllegalArgumentException when element is not of a known type ({@link Place} or {@link Transition} or {@link Arc})
+     * @see #removeEdgeFromGraph(Arc)
+     * @see #removeNodeFromGraph(Node)
+     */
+    void removeElementFromGraph(NetElement element) {
+
+        // TODO: @important Add removing listeners when removing elements from graph
+
+        logger.info("Removing element " + element.getName() + " from graph");
+        if (element instanceof Arc)
+            this.removeEdgeFromGraph((Arc) element);
+        else if (element instanceof Place || element instanceof Transition)
+            this.removeNodeFromGraph((Node) element);
+        else throw new IllegalArgumentException("element is not a known NetElement");
+    }
+
+    /**
+     * Removes given Node from graph
+     *
+     * @param node Node to be removed
+     * @throws IllegalArgumentException when Node with the same id is not in the graph
+     */
+    private void removeNodeFromGraph(Node node) {
+        var graphNode = graph.getNode(node.getId());
+        if (graphNode == null)
+            throw new IllegalArgumentException("Node with id " + node.getId() + " is not in the graph");
+
+        graph.removeNode(graphNode);
+    }
+
+    /**
+     * Removes edge from graph
+     *
+     * @param arc Edge to be removed
+     * @throws IllegalArgumentException when Edge with the same id is not in the graph
+     */
+    private void removeEdgeFromGraph(Arc arc) {
+        var graphEdge = graph.getEdge(arc.getId());
+        if (graphEdge == null)
+            throw new IllegalArgumentException("Edge with id " + arc.getId() + " is not in the graph");
+
+        graph.removeEdge(graphEdge);
+
     }
 
     private Sprite getAttachedTextSprite(NetElement element, String idAppendix, Point3 offset, String initialValue) {
@@ -437,10 +540,27 @@ class Visualizer {
         changeListener.changed(shownCondition, !shownCondition.get(), shownCondition.get());
     }
 
-    public void setNodePosition(String id, double[] position) {
-        GraphPosLengthUtils.nodePosition(graph, id, position);
+    Optional<GraphicElement> findGraphicElementAt(double x, double y, EnumSet<InteractiveElement> elementType) {
+        return Optional.ofNullable(view.getCamera().findGraphicElementAt(viewer.getGraphicGraph(), elementType, x, y));
     }
-    public double[] getNodePosition(String id) {
-        return GraphPosLengthUtils.nodePosition(graph, id);
+
+    Optional<GraphicElement> findGraphicElementAt(double x, double y) {
+        return findGraphicElementAt(x, y, EnumSet.of(InteractiveElement.NODE));
     }
+
+    void setNodePosition(Node node, Point3 graphPoint) {
+        graph.getNode(node.getId()).setAttribute("xyz", graphPoint.x, graphPoint.y, graphPoint.z);
+    }
+
+    Point3 mousePositionToGraphPosition(Point3 mousePoint) {
+        final Point3 loVisible = view.getCamera().getMetrics().loVisible;
+        final Point3 hiVisible = view.getCamera().getMetrics().hiVisible;
+        final double inverseRatioPx2Gu = 1 / view.getCamera().getMetrics().ratioPx2Gu;
+        return new Point3(
+                loVisible.x + (mousePoint.x * inverseRatioPx2Gu),
+                hiVisible.y - (mousePoint.y * inverseRatioPx2Gu),
+                loVisible.z + (mousePoint.z * inverseRatioPx2Gu)
+        );
+    }
+
 }
