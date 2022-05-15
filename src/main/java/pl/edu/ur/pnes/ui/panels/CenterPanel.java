@@ -26,8 +26,6 @@ import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFactory;
 import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;
 import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFactory;
-import pl.edu.ur.pnes.petriNet.visualizer.events.VGVLEvent;
-import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeClickedEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOutEvent;
@@ -137,11 +135,6 @@ public class CenterPanel extends CustomPanel {
         this.visualizerFacade = new VisualizerFactory().create(graphPane, "/css/petri-net-graph.css");
         this.simulatorFacade = SimulatorFactory.create(net);
         visualizerFacade.visualizeNet(net);
-
-        // TODO: Probably there should be VisualizerEvent instead VGVLEvent, but it wasn't my responsibility to prepare those....
-        visualizerFacade.addEventHandler(VGVLEvent.NODES_MOVED_EVENT, event -> {
-            session.undoHistory.push(new MoveNodeAction(visualizerFacade, event.nodesIds, event.offset));
-        });
 
 
         centerToolbarLeft.getChildren().add(layoutButton);

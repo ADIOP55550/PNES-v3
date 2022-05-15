@@ -30,6 +30,9 @@ public abstract class VisualizerEvent extends Event {
     public static EventType<VisualizerNetElementAddedEvent> NET_ELEMENT_ADDED = new EventType<>(NET, "NET_ELEMENT_ADDED");
     public static EventType<VisualizerNetElementRemovedEvent> NET_ELEMENT_REMOVED = new EventType<>(NET, "NET_ELEMENT_REMOVED");
 
+    public static final EventType<VisualizerEvent> COMPOSITE = new EventType<>(ANY, "COMPOSITE");
+    public static final EventType<NodesMovedEvent> NODES_MOVED = new EventType<>(COMPOSITE, "NODES_MOVED");
+
 
     public VisualizerEvent(EventType<? extends VisualizerEvent> eventType) {
         super(eventType);

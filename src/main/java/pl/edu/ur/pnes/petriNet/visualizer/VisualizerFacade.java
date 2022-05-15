@@ -65,8 +65,11 @@ public class VisualizerFacade {
 
     }
 
-    public void setNodePosition(Node node, Point3 point3) {
-        visualizer.setNodePosition(node, point3);
+    public void setNodePosition(String id, double[] xy) {
+        visualizer.setNodePosition(id, xy);
+    }
+    public double[] getNodePosition(String id) {
+        return visualizer.getNodePosition(id);
     }
 
     public Optional<GraphicElement> findGraphicElementAt(double x, double y, EnumSet<InteractiveElement> elementType) {

@@ -548,8 +548,11 @@ class Visualizer {
         return findGraphicElementAt(x, y, EnumSet.of(InteractiveElement.NODE));
     }
 
-    void setNodePosition(Node node, Point3 graphPoint) {
-        graph.getNode(node.getId()).setAttribute("xyz", graphPoint.x, graphPoint.y, graphPoint.z);
+    void setNodePosition(String id, double[] position) {
+        graph.getNode(id).setAttribute("xyz", position[0], position[1], position[2]);
+    }
+    public double[] getNodePosition(String id) {
+        return GraphPosLengthUtils.nodePosition(this.graph, id);
     }
 
     Point3 mousePositionToGraphPosition(Point3 mousePoint) {
@@ -562,5 +565,4 @@ class Visualizer {
                 loVisible.z + (mousePoint.z * inverseRatioPx2Gu)
         );
     }
-
 }
