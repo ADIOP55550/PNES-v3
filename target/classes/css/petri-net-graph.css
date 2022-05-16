@@ -1,9 +1,0 @@
-node {
-    shape: box;
-    fill-color: red;
-    stroke-color: black;
-}
-
-edge {
-    shape: cubic-curve;
-}
