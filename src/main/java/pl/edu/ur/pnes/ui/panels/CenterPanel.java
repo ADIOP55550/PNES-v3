@@ -172,15 +172,20 @@ public class CenterPanel extends CustomPanel {
         });
 
         toggleModeButton.setOnAction(event -> {
+            // toggle mode
             editorMode.set(editorMode.getValue() == EditorMode.RUN ? EditorMode.EDIT : EditorMode.RUN);
+            
+            // deselect all tools
             if (addingGroup.getSelectedToggle() != null) {
                 addingGroup.getSelectedToggle().setSelected(false);
             }
+            
+//             clean up arc adding filters
             inputNode[0] = null;
-
-            visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
-            visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
-            visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
+            
+//             visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
+//             visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
+//             visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
 
         });
 
@@ -270,6 +275,7 @@ public class CenterPanel extends CustomPanel {
                 this.clickedEventEventHandler = event -> {
                     event.consume();
                     if (inputNode[0] != null) {
+                        // Input node already selected, now select output node
                         var el = visualizerFacade.getElementById(event.getClickedNodeId());
                         if (el.isEmpty())
                             return;
@@ -280,7 +286,7 @@ public class CenterPanel extends CustomPanel {
                             outputNode[0].getClasses().remove("badHover");
                             outputNode[0].getClasses().remove("goodHover");
                             outputNode[0] = null;
-                            // try again
+                            // Cannot be connected, try again
                             return;
                         }
 
@@ -295,6 +301,7 @@ public class CenterPanel extends CustomPanel {
                         visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
                         visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
                     } else {
+                        // first click -> find input node for Arc
                         var el = visualizerFacade.getElementById(event.getClickedNodeId());
                         if (el.isEmpty())
                             return;
@@ -303,10 +310,13 @@ public class CenterPanel extends CustomPanel {
                     }
 
                 };
+                
+                // attach event filters
                 visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
                 visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
                 visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
             } else {
+                // cleanup
                 outputNode[0].getClasses().remove("badHover");
                 outputNode[0].getClasses().remove("goodHover");
                 visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
