@@ -116,7 +116,7 @@ public class MainController implements Initializable {
         // initialize common panels
         projectTreePanelController = ProjectTreePanelController.prepare();
         propertiesPanelController = PropertiesPanelController.prepare();
-        rightTabPane.addTab("Project tree", projectTreePanelController.getRoot());
+        leftTabPane.addTab("Project tree", projectTreePanelController.getRoot());
         rightTabPane.addTab("Properties", propertiesPanelController.getRoot());
 
         // button for changing theme
