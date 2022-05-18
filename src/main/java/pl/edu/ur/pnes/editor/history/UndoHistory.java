@@ -105,7 +105,7 @@ public class UndoHistory {
 
     public String dumpToString(int limit) {
         if (steps.size() == 0) {
-            return "(empty)";
+            return "(history empty)";
         }
         StringBuilder builder = new StringBuilder();
         for (int i = Math.max(0, steps.size() - limit); i < steps.size(); i++) {

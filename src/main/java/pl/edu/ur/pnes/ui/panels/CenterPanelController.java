@@ -46,7 +46,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class CenterPanelController implements Initializable, Rooted, Populatable {
+public class CenterPanelController implements Initializable, Rooted {
     @FXML VBox root;
     @Override
     public javafx.scene.Node getRoot() {
@@ -149,18 +149,13 @@ public class CenterPanelController implements Initializable, Rooted, Populatable
         });
 
 
-        this.visualizerFacade = new VisualizerFactory().create(graphPane, "/css/petri-net-graph.css");
         final var net = session.net;
+        this.visualizerFacade = new VisualizerFactory().create(graphPane, "/css/petri-net-graph.css");
         this.simulatorFacade = SimulatorFactory.create(net);
         visualizerFacade.visualizeNet(net);
 
-        System.out.println("wtf: " + this);
-
         visualizerFacade.addEventHandler(VisualizerEvent.NODES_MOVED, event -> {
-            System.out.println("wtf" + this);
-
             session.undoHistory.push(new MoveNodesAction(visualizerFacade, Arrays.asList(event.nodesIds), event.offset));
-//            System.out.println("UndoHistory (right after push): " + session.undoHistory.dumpToString(10));
         });
 
         centerToolbarLeft.getChildren().add(layoutButton);
@@ -221,9 +216,9 @@ public class CenterPanelController implements Initializable, Rooted, Populatable
         addPlaceButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
         addPlaceButton.setOnAction(ActionEvent -> {
             this.mouseEventEventHandler = mouseEvent -> {
-                Place place = new Place(session.net);
+                Place place = new Place(net);
                 Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
-                session.net.addElement(place, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+                net.addElement(place, visualizerFacade.mousePositionToGraphPosition(mousePoint));
                 graphPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
             };
             graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
@@ -235,9 +230,9 @@ public class CenterPanelController implements Initializable, Rooted, Populatable
         addTransitionButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
         addTransitionButton.setOnAction(ActionEvent -> {
             this.mouseEventEventHandler = mouseEvent -> {
-                Transition transition = new Transition(session.net);
+                Transition transition = new Transition(net);
                 Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
-                session.net.addElement(transition, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+                net.addElement(transition, visualizerFacade.mousePositionToGraphPosition(mousePoint));
                 graphPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
             };
             graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
@@ -278,7 +273,7 @@ public class CenterPanelController implements Initializable, Rooted, Populatable
                     var el = visualizerFacade.getElementById(event.getClickedNodeId());
                     if (el.isEmpty())
                         return;
-                    ref.outputNode = session.net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
+                    ref.outputNode = net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
 
                     if (!ref.inputNode.canBeConnectedTo(ref.outputNode)) {
                         // cleanup
@@ -289,8 +284,8 @@ public class CenterPanelController implements Initializable, Rooted, Populatable
                         return;
                     }
 
-                    Arc arc = new Arc(session.net, ref.inputNode, ref.outputNode);
-                    session.net.addElement(arc);
+                    Arc arc = new Arc(net, ref.inputNode, ref.outputNode);
+                    net.addElement(arc);
                     System.out.println("Got output node: " + el.get().getName());
 
                     // cleanup
@@ -303,7 +298,7 @@ public class CenterPanelController implements Initializable, Rooted, Populatable
                     var el = visualizerFacade.getElementById(event.getClickedNodeId());
                     if (el.isEmpty())
                         return;
-                    ref.inputNode = session.net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
+                    ref.inputNode = net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
                     System.out.println("Got input node: " + el.get().getName());
                 }
             };
@@ -312,10 +307,5 @@ public class CenterPanelController implements Initializable, Rooted, Populatable
             visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
             visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
         });
-    }
-
-    @Override
-    public void populate() {
-
     }
 }
