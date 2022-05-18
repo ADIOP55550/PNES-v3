@@ -1,8 +1,6 @@
 package pl.edu.ur.pnes.ui.panels;
 
 import javafx.application.Platform;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -32,7 +30,7 @@ import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeClicke
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOutEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOverEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeReleasedEvent;
-import pl.edu.ur.pnes.ui.EditorMode;
+import pl.edu.ur.pnes.editor.Mode;
 import pl.edu.ur.pnes.ui.utils.FXMLUtils;
 import pl.edu.ur.pnes.ui.utils.Rooted;
 
@@ -82,8 +80,6 @@ public class CenterPanelController implements Initializable, Rooted {
     private final double DEFAULT_SLIDER_DURATION = 1000;
     private final Slider speedSlider = new Slider(MIN_SLIDER_DURATION, MAX_SLIDER_DURATION, DEFAULT_SLIDER_DURATION);
 
-
-    ObjectProperty<EditorMode> editorMode = new SimpleObjectProperty<>(EditorMode.EDIT);
     private EventHandler<MouseEvent> mouseEventEventHandler;
     private EventHandler<VisualizerMouseNodeClickedEvent> clickedEventEventHandler;
 
@@ -147,7 +143,7 @@ public class CenterPanelController implements Initializable, Rooted {
         addTransitionButton.setToggleGroup(addingGroup);
         addArcButton.setToggleGroup(addingGroup);
 
-        editorMode.addListener((observable, oldValue, newValue) -> {
+        session.mode().addListener((observable, oldValue, newValue) -> {
             switch (newValue) {
                 case RUN -> {
                     visualizerFacade.setBackgroundColor(new Color(169, 202, 227));
@@ -183,9 +179,7 @@ public class CenterPanelController implements Initializable, Rooted {
         visualizerFacade.visualizeNet(net);
 
         net.addEventHandler(NetEvent.NODES_MOVED, event -> {
-            session.undoHistory.push(new MoveNodesAction(visualizerFacade, Arrays.asList(event.nodes), event.offset) {{
-                applied = true;
-            }});
+            session.undoHistory.push(new MoveNodesAction(visualizerFacade, Arrays.asList(event.nodes), event.offset).asApplied());
         });
 
         centerToolbarLeft.getChildren().add(layoutButton);
@@ -200,8 +194,8 @@ public class CenterPanelController implements Initializable, Rooted {
         });
 
 
-        editorMode.addListener((observable, oldValue, newValue) -> {
-            if (newValue != EditorMode.RUN) {
+        session.mode().addListener((observable, oldValue, newValue) -> {
+            if (newValue != Mode.RUN) {
                 simulatorFacade.stopAutoStep();
                 simulatorFacade.stopAutoStep();
             }
@@ -209,7 +203,7 @@ public class CenterPanelController implements Initializable, Rooted {
 
         toggleModeButton.setOnAction(event -> {
             // toggle mode
-            editorMode.set(editorMode.getValue() == EditorMode.RUN ? EditorMode.EDIT : EditorMode.RUN);
+            session.mode().set(session.mode().getValue() == Mode.RUN ? Mode.EDIT : Mode.RUN);
             
             // deselect all tools
             if (addingGroup.getSelectedToggle() != null) {
@@ -225,7 +219,7 @@ public class CenterPanelController implements Initializable, Rooted {
 
         });
 
-        toggleModeButton.textProperty().bind(editorMode.asString("%s mode"));
+        toggleModeButton.textProperty().bind(session.mode().asString("%s mode"));
 
         progressCircle.setProgress(0);
 
@@ -244,31 +238,29 @@ public class CenterPanelController implements Initializable, Rooted {
 
         simulatorFacade.autoStepWaitDurationProperty().bindBidirectional(speedSlider.valueProperty());
 
-        stepButton.disableProperty().bind(simulatorFacade.autoStepProperty().isEqualTo(SimulatorFacade.AutoStepState.DONE).or(editorMode.isNotEqualTo(EditorMode.RUN)));
+        stepButton.disableProperty().bind(simulatorFacade.autoStepProperty().isEqualTo(SimulatorFacade.AutoStepState.DONE).or(session.mode().isNotEqualTo(Mode.RUN)));
         stepButton.setOnAction(actionEvent -> simulatorFacade.singleAutomaticStep());
 
-        stopButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.RUN));
+        stopButton.disableProperty().bind(session.mode().isNotEqualTo(Mode.RUN));
         stopButton.setOnAction(actionEvent -> simulatorFacade.stopAutoStep());
 
         playPauseButton.disableProperty().bind(simulatorFacade.autoStepProperty().isEqualTo(SimulatorFacade.AutoStepState.DONE));
         playPauseButton.setOnAction(actionEvent -> {
-            if (editorMode.getValue() == EditorMode.EDIT) {
-                editorMode.set(EditorMode.RUN);
+            if (session.mode().getValue() == Mode.EDIT) {
+                session.mode().set(Mode.RUN);
                 return;
             }
             simulatorFacade.startOrPauseAutoStep();
         });
 
         // Add new Place on mouse point
-        addPlaceButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
+        addPlaceButton.disableProperty().bind(session.mode().isNotEqualTo(Mode.EDIT));
         addPlaceButton.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 this.mouseEventEventHandler = mouseEvent -> {
                     final var place = new Place(net);
                     getSession().undoHistory.push(
-                        new AddNodeAction(net, place, visualizerFacade.mousePositionToGraphPosition(mouseEvent)) {{
-                            apply();
-                        }}
+                        new AddNodeAction(net, place, visualizerFacade.mousePositionToGraphPosition(mouseEvent)).andApply()
                     );
                 };
                 graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
@@ -281,15 +273,13 @@ public class CenterPanelController implements Initializable, Rooted {
         /*
          * Add new Transition on mouse point
          */
-        addTransitionButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
+        addTransitionButton.disableProperty().bind(session.mode().isNotEqualTo(Mode.EDIT));
         addTransitionButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 this.mouseEventEventHandler = mouseEvent -> {
                     final var transition = new Transition(net);
                     getSession().undoHistory.push(
-                        new AddNodeAction(net, transition, visualizerFacade.mousePositionToGraphPosition(mouseEvent)) {{
-                            apply();
-                        }}
+                        new AddNodeAction(net, transition, visualizerFacade.mousePositionToGraphPosition(mouseEvent)).andApply()
                     );
                 };
                 graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
@@ -302,7 +292,7 @@ public class CenterPanelController implements Initializable, Rooted {
          * Set new Arc
          * If button is pressed, choose your first and second node to create arc
          */
-        addArcButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
+        addArcButton.disableProperty().bind(session.mode().isNotEqualTo(Mode.EDIT));
         addArcButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 this.clickedEventEventHandler = event -> {
@@ -324,7 +314,7 @@ public class CenterPanelController implements Initializable, Rooted {
                         }
 
                         final var arc = new Arc(net, inputNode[0], outputNode[0]);
-                        getSession().undoHistory.push(new AddArcAction(net, arc) {{ apply(); }});
+                        getSession().undoHistory.push(new AddArcAction(net, arc).andApply());
                         System.out.println("Got output node: " + el.get().getName());
 
                         // cleanup

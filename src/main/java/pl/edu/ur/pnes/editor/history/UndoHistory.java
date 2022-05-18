@@ -2,6 +2,8 @@ package pl.edu.ur.pnes.editor.history;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pl.edu.ur.pnes.editor.Mode;
+import pl.edu.ur.pnes.editor.Session;
 
 import java.util.ArrayList;
 
@@ -10,6 +12,15 @@ public class UndoHistory {
 
     ArrayList<Undoable> steps = new ArrayList<>();
     int lastAppliedIndex = -1;
+    final Session session;
+
+    public Session getSession() {
+        return session;
+    }
+
+    public UndoHistory(Session session) {
+        this.session = session;
+    }
 
     /**
      * @return How many steps can be undone.
@@ -73,7 +84,7 @@ public class UndoHistory {
             steps.remove(i);
         }
         steps.add(step);
-        logger.debug("pushed #" + steps.size() + " " + step.details());
+        logger.debug("pushed #%d %s".formatted(steps.size(), step.details()));
         lastAppliedIndex += 1;
     }
 
@@ -84,8 +95,12 @@ public class UndoHistory {
     public boolean undo() {
         final var step = peekUndo();
         if (step == null) return false;
+        if (session.mode().get() == Mode.RUN && !step.getClass().isAnnotationPresent(UndoableWhileRunning.class)) {
+            logger.debug("couldn't undo #%d %s because is not undoable while running".formatted(lastAppliedIndex + 1, step.description()));
+            return false;
+        }
         step.undo();
-        logger.debug("undid #" + (lastAppliedIndex + 1) + " " + step.details());
+        logger.debug("undid #%d %s".formatted(lastAppliedIndex + 1, step.details()));
         lastAppliedIndex -= 1;
         return true;
     }
@@ -97,9 +112,13 @@ public class UndoHistory {
     public boolean redo() {
         final var step = peekRedo();
         if (step == null) return false;
+        if (session.mode().get() == Mode.RUN && !step.getClass().isAnnotationPresent(UndoableWhileRunning.class)) {
+            logger.debug("couldn't redo #%d %s because is not undoable while running".formatted(lastAppliedIndex + 2, step.description()));
+            return false;
+        }
         step.redo();
         lastAppliedIndex += 1;
-        logger.debug("redid #" + (lastAppliedIndex + 1) + " " + step.details());
+        logger.debug("redid #%d %s".formatted(lastAppliedIndex + 1, step.details()));
         return true;
     }
 

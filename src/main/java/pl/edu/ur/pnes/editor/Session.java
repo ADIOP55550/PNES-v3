@@ -1,20 +1,12 @@
 package pl.edu.ur.pnes.editor;
 
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.beans.value.WeakChangeListener;
 import pl.edu.ur.pnes.editor.history.UndoHistory;
 import pl.edu.ur.pnes.petriNet.Net;
 import pl.edu.ur.pnes.petriNet.PetriNet;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 
 /**
  * Represents editor session state while working with individual file.
@@ -22,7 +14,15 @@ import java.util.HashSet;
 public class Session {
     final public Net net;
 
-    final public UndoHistory undoHistory = new UndoHistory();
+    final public UndoHistory undoHistory = new UndoHistory(this);
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ObjectProperty<Mode> modeProperty = new SimpleObjectProperty<>(Mode.EDIT);
+
+    public ObjectProperty<Mode> mode() {
+        return modeProperty;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////
 

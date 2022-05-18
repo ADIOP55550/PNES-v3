@@ -2,6 +2,7 @@ package pl.edu.ur.pnes.editor.actions;
 
 import javafx.geometry.Point3D;
 import pl.edu.ur.pnes.editor.history.UndoableAction;
+import pl.edu.ur.pnes.editor.history.UndoableWhileRunning;
 import pl.edu.ur.pnes.petriNet.Node;
 import pl.edu.ur.pnes.petriNet.Place;
 import pl.edu.ur.pnes.petriNet.Transition;
@@ -10,6 +11,7 @@ import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@UndoableWhileRunning
 public class MoveNodesAction extends UndoableAction {
     public final VisualizerFacade visualizer;
     public final List<Node> nodes;
