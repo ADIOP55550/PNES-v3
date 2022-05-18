@@ -129,9 +129,13 @@ public class MainController implements Initializable {
     }
 
 
+    /**
+     * Updates edit menu before showing.
+     */
     @FXML
     public void editMenuShowingAction(Event event) {
         logger.debug("UndoHistory (on edit menu showing): " + getFocusedSession().undoHistory.dumpToString(10));
+
         final var undoable = getFocusedSession().undoHistory.peekUndo();
         if (undoable == null) {
             menuUndo.setDisable(true);
@@ -151,6 +155,16 @@ public class MainController implements Initializable {
             menuRedo.setDisable(false);
             menuRedo.setText("Redo (%s)".formatted(redoable.description()));
         }
+    }
+
+    /**
+     * Updates edit menu after hidden.
+     */
+    @FXML
+    public void editMenuHiddenAction(Event event) {
+        // Make sure undo/redo are always enabled, so keyboard accelerator works
+        menuUndo.setDisable(false);
+        menuRedo.setDisable(false);
     }
 
     @FXML

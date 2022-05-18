@@ -26,14 +26,14 @@
                                 <MenuItem mnemonicParsing="false" text="Close" />
                             </items>
                         </Menu>
-                        <Menu mnemonicParsing="false" onShowing="#editMenuShowingAction" text="Edit">
+                        <Menu mnemonicParsing="false" onHidden="#editMenuHiddenAction" onShowing="#editMenuShowingAction" text="Edit">
                             <items>
-                        <MenuItem fx:id="menuUndo" disable="true" mnemonicParsing="false" onAction="#undoAction" text="Undo (...)">
+                        <MenuItem fx:id="menuUndo" mnemonicParsing="false" onAction="#undoAction" text="Undo (...)">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="Z" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
                         </MenuItem>
-                        <MenuItem fx:id="menuRedo" disable="true" mnemonicParsing="false" onAction="#redoAction" text="Redo (...)">
+                        <MenuItem fx:id="menuRedo" mnemonicParsing="false" onAction="#redoAction" text="Redo (...)">
                            <accelerator>
                               <KeyCodeCombination alt="UP" code="Y" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                            </accelerator>
