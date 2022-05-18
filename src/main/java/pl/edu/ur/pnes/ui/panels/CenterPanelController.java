@@ -9,9 +9,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Orientation;
 import javafx.scene.Cursor;
 import javafx.scene.control.Button;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.Slider;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -72,11 +70,12 @@ public class CenterPanelController implements Initializable, Rooted {
     private final Button stopButton = new Button("Stop ⏹");
     private final Button playPauseButton = new Button("Play/pause ⏯");
     private final Button layoutButton = new Button("Layout");
-    private final Button addPlaceButton = new Button("Place");
-    private final Button addTransitionButton = new Button("Transition");
-    private final Button addArcButton = new Button("Arc");
+    private final ToggleButton addPlaceButton = new ToggleButton("Place");
+    private final ToggleButton addTransitionButton = new ToggleButton("Transition");
+    private final ToggleButton addArcButton = new ToggleButton("Arc");
     private final Button psabutton = new Button("PrintSelNodes");
     private final Button toggleModeButton = new Button("RUN mode 🏁");
+    private final ToggleGroup addingGroup = new ToggleGroup();
 
     private final double MIN_SLIDER_DURATION = 100;
     private final double MAX_SLIDER_DURATION = 5000;
@@ -87,6 +86,25 @@ public class CenterPanelController implements Initializable, Rooted {
     ObjectProperty<EditorMode> editorMode = new SimpleObjectProperty<>(EditorMode.EDIT);
     private EventHandler<MouseEvent> mouseEventEventHandler;
     private EventHandler<VisualizerMouseNodeClickedEvent> clickedEventEventHandler;
+
+    final Node[] inputNode = {null};
+    final Node[] outputNode = {null};
+
+    final EventHandler<VisualizerMouseNodeOverEvent> nodeOverEventEventHandler = event -> {
+        if (inputNode[0] == null)
+            return;
+        visualizerFacade.getElementById(event.getNodeId()).ifPresent(element -> {
+            if (element instanceof Node node)
+                element.getClasses().add(0, inputNode[0].canBeConnectedTo(node) ? "goodHover" : "badHover");
+        });
+    };
+
+    final EventHandler<VisualizerMouseNodeOutEvent> nodeOutEventEventHandler = event -> {
+        visualizerFacade.getElementById(event.getNodeId()).ifPresent(element -> {
+            element.getClasses().remove("badHover");
+            element.getClasses().remove("goodHover");
+        });
+    };
 
     protected Session session;
 
@@ -119,6 +137,11 @@ public class CenterPanelController implements Initializable, Rooted {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
+        addPlaceButton.setToggleGroup(addingGroup);
+        addTransitionButton.setToggleGroup(addingGroup);
+        addArcButton.setToggleGroup(addingGroup);
+
         editorMode.addListener((observable, oldValue, newValue) -> {
             switch (newValue) {
                 case RUN -> {
@@ -177,7 +200,24 @@ public class CenterPanelController implements Initializable, Rooted {
             }
         });
 
-        toggleModeButton.setOnAction(event -> editorMode.set(editorMode.getValue() == EditorMode.RUN ? EditorMode.EDIT : EditorMode.RUN));
+        toggleModeButton.setOnAction(event -> {
+            // toggle mode
+            editorMode.set(editorMode.getValue() == EditorMode.RUN ? EditorMode.EDIT : EditorMode.RUN);
+            
+            // deselect all tools
+            if (addingGroup.getSelectedToggle() != null) {
+                addingGroup.getSelectedToggle().setSelected(false);
+            }
+            
+//             clean up arc adding filters
+            inputNode[0] = null;
+            
+//             visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
+//             visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
+//             visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
+
+        });
+
         toggleModeButton.textProperty().bind(editorMode.asString("%s mode"));
 
         progressCircle.setProgress(0);
@@ -214,29 +254,38 @@ public class CenterPanelController implements Initializable, Rooted {
 
         // Add new Place on mouse point
         addPlaceButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
-        addPlaceButton.setOnAction(ActionEvent -> {
-            this.mouseEventEventHandler = mouseEvent -> {
-                Place place = new Place(net);
-                Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
-                net.addElement(place, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+
+        addPlaceButton.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                this.mouseEventEventHandler = mouseEvent -> {
+                    Place place = new Place(net);
+                    Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
+                    net.addElement(place, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+                };
+                graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
+            } else {
                 graphPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
-            };
-            graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
+            }
         });
+
 
         /*
          * Add new Transition on mouse point
          */
         addTransitionButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
-        addTransitionButton.setOnAction(ActionEvent -> {
-            this.mouseEventEventHandler = mouseEvent -> {
-                Transition transition = new Transition(net);
-                Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
-                net.addElement(transition, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+        addTransitionButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                this.mouseEventEventHandler = mouseEvent -> {
+                    Transition transition = new Transition(net);
+                    Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
+                    net.addElement(transition, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+                };
+                graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
+            } else {
                 graphPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
-            };
-            graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
+            }
         });
+
 
         psabutton.setOnAction(event -> {
             visualizerFacade.printSelectedNodes();
@@ -248,64 +297,62 @@ public class CenterPanelController implements Initializable, Rooted {
          * If button is pressed, choose your first and second node to create arc
          */
         addArcButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
-        addArcButton.setOnAction(ActiveEvent -> {
-            var ref = new Object() {
-                Node inputNode = null;
-                Node outputNode = null;
-            };
-            final EventHandler<VisualizerMouseNodeOverEvent> nodeOverEventEventHandler = event -> {
-                if (ref.inputNode == null)
-                    return;
-                visualizerFacade.getElementById(event.getNodeId()).ifPresent(element -> {
-                    if (element instanceof Node node)
-                        element.getClasses().add(0, ref.inputNode.canBeConnectedTo(node) ? "goodHover" : "badHover");
-                });
-            };
-            final EventHandler<VisualizerMouseNodeOutEvent> nodeOutEventEventHandler = event -> {
-                visualizerFacade.getElementById(event.getNodeId()).ifPresent(element -> {
-                    element.getClasses().remove("badHover");
-                    element.getClasses().remove("goodHover");
-                });
-            };
-            this.clickedEventEventHandler = event -> {
-                event.consume();
-                if (ref.inputNode != null) {
-                    var el = visualizerFacade.getElementById(event.getClickedNodeId());
-                    if (el.isEmpty())
-                        return;
-                    ref.outputNode = net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
 
-                    if (!ref.inputNode.canBeConnectedTo(ref.outputNode)) {
+        addArcButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
+
+            if (newValue) {
+                this.clickedEventEventHandler = event -> {
+                    event.consume();
+                    if (inputNode[0] != null) {
+                        // Input node already selected, now select output node
+                        var el = visualizerFacade.getElementById(event.getClickedNodeId());
+                        if (el.isEmpty())
+                            return;
+                        outputNode[0] = net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
+
+                        if (!inputNode[0].canBeConnectedTo(outputNode[0])) {
+                            // cleanup
+                            outputNode[0].getClasses().remove("badHover");
+                            outputNode[0].getClasses().remove("goodHover");
+                            outputNode[0] = null;
+                            // Cannot be connected, try again
+                            return;
+                        }
+
+                        Arc arc = new Arc(net, inputNode[0], outputNode[0]);
+                        net.addElement(arc);
+                        System.out.println("Got output node: " + el.get().getName());
+
                         // cleanup
-                        ref.outputNode.getClasses().remove("badHover");
-                        ref.outputNode.getClasses().remove("goodHover");
-                        ref.outputNode = null;
-                        // try again
-                        return;
+                        outputNode[0].getClasses().remove("badHover");
+                        outputNode[0].getClasses().remove("goodHover");
+                        visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
+                        visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
+                        visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
+                    } else {
+                        // first click -> find input node for Arc
+                        var el = visualizerFacade.getElementById(event.getClickedNodeId());
+                        if (el.isEmpty())
+                            return;
+                        inputNode[0] = net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
+                        System.out.println("Got input node: " + el.get().getName());
                     }
 
-                    Arc arc = new Arc(net, ref.inputNode, ref.outputNode);
-                    net.addElement(arc);
-                    System.out.println("Got output node: " + el.get().getName());
-
-                    // cleanup
-                    ref.outputNode.getClasses().remove("badHover");
-                    ref.outputNode.getClasses().remove("goodHover");
-                    visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
-                    visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
-                    visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
-                } else {
-                    var el = visualizerFacade.getElementById(event.getClickedNodeId());
-                    if (el.isEmpty())
-                        return;
-                    ref.inputNode = net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
-                    System.out.println("Got input node: " + el.get().getName());
-                }
-            };
-
-            visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
-            visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
-            visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
+                };
+                
+                // attach event filters
+                visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
+                visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
+                visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
+            } else {
+                // cleanup
+                outputNode[0].getClasses().remove("badHover");
+                outputNode[0].getClasses().remove("goodHover");
+                visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
+                visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
+                visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
+                inputNode[0] = null;
+            }
         });
     }
 }
