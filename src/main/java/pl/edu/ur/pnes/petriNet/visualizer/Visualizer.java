@@ -486,6 +486,11 @@ class Visualizer {
         if (graphNode == null)
             throw new IllegalArgumentException("Node with id " + node.getId() + " is not in the graph");
 
+        spriteManager.removeSprite(nodeIdSpriteMap.remove(node).getId());
+        if (node instanceof Place place) {
+            spriteManager.removeSprite(placeTokensSpriteMap.remove(node).getId());
+        }
+
         graph.removeNode(graphNode);
     }
 
@@ -580,14 +585,14 @@ class Visualizer {
         return GraphPosLengthUtils.nodePosition(this.graph, id);
     }
 
-    Point3 mousePositionToGraphPosition(Point3 mousePoint) {
+    double[] mousePositionToGraphPosition(double[] mousePoint) {
         final Point3 loVisible = view.getCamera().getMetrics().loVisible;
         final Point3 hiVisible = view.getCamera().getMetrics().hiVisible;
         final double inverseRatioPx2Gu = 1 / view.getCamera().getMetrics().ratioPx2Gu;
-        return new Point3(
-                loVisible.x + (mousePoint.x * inverseRatioPx2Gu),
-                hiVisible.y - (mousePoint.y * inverseRatioPx2Gu),
-                loVisible.z + (mousePoint.z * inverseRatioPx2Gu)
-        );
+        return new double[] {
+                loVisible.x + (mousePoint[0] * inverseRatioPx2Gu),
+                hiVisible.y - (mousePoint[1] * inverseRatioPx2Gu),
+                loVisible.z + (mousePoint[2] * inverseRatioPx2Gu)
+        };
     }
 }
