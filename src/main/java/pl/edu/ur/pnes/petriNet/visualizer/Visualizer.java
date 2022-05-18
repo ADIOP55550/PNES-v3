@@ -143,7 +143,9 @@ class Visualizer {
                 nodes = new Node[] { (Node) net.getElementById(event.getClickedNodeId()).orElseThrow() };
             }
 
-            this.net.fireEvent(new NodesMovedEvent(nodes, offset));
+            if (Math.abs(offset[0]) + Math.abs(offset[1]) > 0.001) {
+                this.net.fireEvent(new NodesMovedEvent(nodes, offset));
+            }
         });
 
         view.getCamera().setGraphViewport(0, 0, 100, 100);
