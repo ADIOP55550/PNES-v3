@@ -2,6 +2,7 @@ package pl.edu.ur.pnes.petriNet.visualizer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.graphstream.graph.Graph;
 import org.graphstream.stream.AttributeSink;
 import org.graphstream.ui.view.Viewer;
 import org.graphstream.ui.view.ViewerListener;
@@ -30,13 +31,14 @@ public class GraphstreamViewerListener implements ViewerListener {
         return hooked;
     }
 
-    void hookInto(Viewer viewer) {
+    void hookInto(Viewer viewer, Graph graph) {
         if (hooked)
             throw new IllegalStateException("EventsHandler already hooked");
         this.hooked = true;
         this.fromViewerPipe = viewer.newViewerPipe();
         fromViewerPipe.addViewerListener(this);
         fromViewerPipe.addAttributeSink(sink);
+        fromViewerPipe.addAttributeSink(graph);
 
 
         this.pumpThread = new Thread(() -> {

@@ -15,10 +15,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.EdgeRejectedException;
+import org.graphstream.graph.Element;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.ui.fx_viewer.FxViewPanel;
 import org.graphstream.ui.fx_viewer.FxViewer;
+import org.graphstream.ui.fx_viewer.util.FxMouseOverMouseManager;
 import org.graphstream.ui.geom.Point2;
 import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
@@ -32,8 +34,10 @@ import org.graphstream.ui.view.util.InteractiveElement;
 import pl.edu.ur.pnes.petriNet.*;
 import pl.edu.ur.pnes.petriNet.events.NetEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
+import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.NodesMovedEvent;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 class Visualizer {
@@ -62,6 +66,8 @@ class Visualizer {
     private final Map<Node, Sprite> nodeIdSpriteMap = new HashMap<>();
     private final Map<Arc, Sprite> arcIdSpriteMap = new HashMap<>();
     private final Map<Arc, Sprite> arcWeightSpriteMap = new HashMap<>();
+
+    private double[] dragStartNodePosition;
 
     VisualizerEventsHandler getVisualizerEventsHandler() {
         return visualizerEventsHandler;
@@ -113,15 +119,33 @@ class Visualizer {
         this.viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
         this.view = (FxViewPanel) viewer.addView(FxViewer.DEFAULT_VIEW_ID, renderer);
 
-        visualizerEventsHandler = new VisualizerEventsHandler(viewer);
+        visualizerEventsHandler = new VisualizerEventsHandler(viewer, graph);
 
-        // EXAMPLE VGVL EVENT HANDLER
         this.visualizerEventsHandler.addEventHandler(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
-            System.out.println("Node Clicked! (handler) #" + event.getClickedNodeId());
+            logger.debug("Node %s clicked".formatted(event.getClickedNodeId()));
+            dragStartNodePosition = getNodePosition(event.getClickedNodeId());
         });
-        // EXAMPLE VGVL EVENT FILTER
-        this.visualizerEventsHandler.addEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
-            System.out.println("Node Clicked! (filter) #" + event.getClickedNodeId());
+        this.visualizerEventsHandler.addEventHandler(VisualizerEvent.MOUSE_NODE_RELEASED, event -> {
+            logger.debug("Node %s released".formatted(event.getClickedNodeId()));
+            final var position = getNodePosition(event.getClickedNodeId());
+            final var offset = new double[] {
+                    position[0] - dragStartNodePosition[0],
+                    position[1] - dragStartNodePosition[1],
+                    position[2] - dragStartNodePosition[2],
+            };
+
+            String[] nodesIds;
+            if (graph.getNode(event.getClickedNodeId()).hasAttribute("ui.selected")) {
+                // Moving selection
+                nodesIds = new String[] { event.getClickedNodeId() };
+                //final var nodesIds = (String[]) graph.nodes().map(Element::getId).toArray(); // TODO: to be used when mouse manger allow moving multiple nodes at once.
+            }
+            else {
+                // Outside selection
+                nodesIds = new String[] { event.getClickedNodeId() };
+            }
+
+            this.visualizerEventsHandler.fireEvent(new NodesMovedEvent(nodesIds, offset));
         });
 
         view.getCamera().setGraphViewport(0, 0, 100, 100);
@@ -202,6 +226,7 @@ class Visualizer {
         view.enableMouseOptions();
 //        equal to:
 //        viewer.getDefaultView().setMouseManager(new MouseOverMouseManager(EnumSet.of(InteractiveElement.EDGE, InteractiveElement.NODE, InteractiveElement.SPRITE)));
+//        viewer.getDefaultView().setMouseManager(new FxMouseOverMouseManager(EnumSet.of(InteractiveElement.EDGE, InteractiveElement.NODE, InteractiveElement.SPRITE)));
 
 
         view.getCamera().setAutoFitView(false);

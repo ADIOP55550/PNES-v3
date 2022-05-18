@@ -5,6 +5,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.geometry.Orientation;
 import javafx.scene.Cursor;
 import javafx.scene.control.Button;
@@ -14,8 +15,9 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import pl.edu.ur.pnes.editor.Session;
-import pl.edu.ur.pnes.editor.actions.MoveNodeAction;
+import pl.edu.ur.pnes.editor.actions.MoveNodesAction;
 import pl.edu.ur.pnes.petriNet.Arc;
 import pl.edu.ur.pnes.petriNet.PetriNet;
 import pl.edu.ur.pnes.petriNet.Place;
@@ -31,13 +33,26 @@ import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeClicke
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOutEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOverEvent;
 import pl.edu.ur.pnes.ui.EditorMode;
+import pl.edu.ur.pnes.ui.utils.FXMLUtils;
+import pl.edu.ur.pnes.ui.utils.Populatable;
+import pl.edu.ur.pnes.ui.utils.Rooted;
 
 import java.awt.*;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class CenterPanel extends CustomPanel {
+public class CenterPanelController implements Initializable, Rooted, Populatable {
+    @FXML VBox root;
+    @Override
+    public javafx.scene.Node getRoot() {
+        return root;
+    }
+
     @FXML
     public HBox centerToolbarRight;
     @FXML
@@ -73,12 +88,37 @@ public class CenterPanel extends CustomPanel {
     private EventHandler<MouseEvent> mouseEventEventHandler;
     private EventHandler<VisualizerMouseNodeClickedEvent> clickedEventEventHandler;
 
-    public Session session = new Session();
+    protected Session session;
 
+    /**
+     * The session represented by the panel.
+     */
+    public Session getSession() {
+        return session;
+    }
 
+    /**
+     * Loads new instance of the panel to represent specified session.
+     * @param session Session represented by the panel.
+     */
+    static public CenterPanelController prepare(final Session session) {
+        final var loader = FXMLUtils.getLoader(CenterPanelController.class);
+        final var controller = new CenterPanelController(session);
+        try {
+            loader.setController(controller);
+            loader.load();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return controller;
+    }
 
-    public void initialize() {
+    protected CenterPanelController(final Session session) {
+        this.session = session;
+    }
 
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
         editorMode.addListener((observable, oldValue, newValue) -> {
             switch (newValue) {
                 case RUN -> {
@@ -108,34 +148,20 @@ public class CenterPanel extends CustomPanel {
             graphPane.setCursor(Cursor.DEFAULT);
         });
 
-        var net = new PetriNet();
-        final Place place1 = new Place(net);
-        final Place place2 = new Place(net);
-        final Place place3 = new Place(net);
-        final Place place4 = new Place(net);
-        place1.setTokens(2);
-        final Transition transition1 = new Transition(net);
-        final Transition transition2 = new Transition(net);
-        final Transition transition3 = new Transition(net);
-        place3.setTokens(1);
-        final Arc arc1 = new Arc(net, place1, transition1);
-        final Arc arc2 = new Arc(net, transition1, place2);
-        final Arc arc3 = new Arc(net, place2, transition2);
-        final Arc arc4 = new Arc(net, transition2, place1);
-        arc4.setWeight(2);
-        final Arc arc5 = new Arc(net, transition2, place3);
-        arc5.setWeight(2);
-        final Arc arc6 = new Arc(net, place2, transition3);
-//        arc5.setWeight(3);
-        final Arc arc7 = new Arc(net, transition3, place4);
-        final Arc arc8 = new Arc(net, place3, transition2);
-
-        net.addElements(place1, place2, place3, place4, transition1, transition2, transition3, arc1, arc2, arc3, arc4, arc5, arc6, arc7, arc8);
 
         this.visualizerFacade = new VisualizerFactory().create(graphPane, "/css/petri-net-graph.css");
+        final var net = session.net;
         this.simulatorFacade = SimulatorFactory.create(net);
         visualizerFacade.visualizeNet(net);
 
+        System.out.println("wtf: " + this);
+
+        visualizerFacade.addEventHandler(VisualizerEvent.NODES_MOVED, event -> {
+            System.out.println("wtf" + this);
+
+            session.undoHistory.push(new MoveNodesAction(visualizerFacade, Arrays.asList(event.nodesIds), event.offset));
+//            System.out.println("UndoHistory (right after push): " + session.undoHistory.dumpToString(10));
+        });
 
         centerToolbarLeft.getChildren().add(layoutButton);
         layoutButton.setOnAction(actionEvent -> {
@@ -195,9 +221,9 @@ public class CenterPanel extends CustomPanel {
         addPlaceButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
         addPlaceButton.setOnAction(ActionEvent -> {
             this.mouseEventEventHandler = mouseEvent -> {
-                Place place = new Place(net);
+                Place place = new Place(session.net);
                 Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
-                net.addElement(place, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+                session.net.addElement(place, visualizerFacade.mousePositionToGraphPosition(mousePoint));
                 graphPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
             };
             graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
@@ -209,9 +235,9 @@ public class CenterPanel extends CustomPanel {
         addTransitionButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
         addTransitionButton.setOnAction(ActionEvent -> {
             this.mouseEventEventHandler = mouseEvent -> {
-                Transition transition = new Transition(net);
+                Transition transition = new Transition(session.net);
                 Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
-                net.addElement(transition, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+                session.net.addElement(transition, visualizerFacade.mousePositionToGraphPosition(mousePoint));
                 graphPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
             };
             graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
@@ -252,7 +278,7 @@ public class CenterPanel extends CustomPanel {
                     var el = visualizerFacade.getElementById(event.getClickedNodeId());
                     if (el.isEmpty())
                         return;
-                    ref.outputNode = net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
+                    ref.outputNode = session.net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
 
                     if (!ref.inputNode.canBeConnectedTo(ref.outputNode)) {
                         // cleanup
@@ -263,8 +289,8 @@ public class CenterPanel extends CustomPanel {
                         return;
                     }
 
-                    Arc arc = new Arc(net, ref.inputNode, ref.outputNode);
-                    net.addElement(arc);
+                    Arc arc = new Arc(session.net, ref.inputNode, ref.outputNode);
+                    session.net.addElement(arc);
                     System.out.println("Got output node: " + el.get().getName());
 
                     // cleanup
@@ -277,7 +303,7 @@ public class CenterPanel extends CustomPanel {
                     var el = visualizerFacade.getElementById(event.getClickedNodeId());
                     if (el.isEmpty())
                         return;
-                    ref.inputNode = net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
+                    ref.inputNode = session.net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
                     System.out.println("Got input node: " + el.get().getName());
                 }
             };
@@ -288,4 +314,8 @@ public class CenterPanel extends CustomPanel {
         });
     }
 
+    @Override
+    public void populate() {
+
+    }
 }

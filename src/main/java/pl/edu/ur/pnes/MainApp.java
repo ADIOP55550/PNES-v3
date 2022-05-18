@@ -1,65 +1,70 @@
 package pl.edu.ur.pnes;
 
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import pl.edu.ur.pnes.editor.Session;
+import pl.edu.ur.pnes.petriNet.Arc;
+import pl.edu.ur.pnes.petriNet.PetriNet;
 import pl.edu.ur.pnes.petriNet.Place;
-import pl.edu.ur.pnes.ui.PanelManager;
-import pl.edu.ur.pnes.ui.panels.CenterPanel;
-import pl.edu.ur.pnes.ui.panels.ProjectTreePanel;
-import pl.edu.ur.pnes.ui.panels.PropertiesPanel;
+import pl.edu.ur.pnes.petriNet.Transition;
 
-import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
 public class MainApp extends Application {
+    public static Stage mainStage;
     public static MainController mainController;
     public static JMetro mainJMetro = new JMetro(Style.DARK); // Default app style
-    public static Stage mainStage;
-    public static CenterPanel centerPanel;
-
-    public static Session getSession() {
-        // TODO: get session (associated with focused tab) (assuming multiple sessions (files, nets) could be open at once at some point)
-        return centerPanel.session;
-    }
-
 
     @Override
     public void start(Stage stage) throws IOException {
+        mainStage = stage;
+
         System.setProperty("log4j2.configurationFile", Objects.requireNonNull(MainApp.class.getResource("/log4j2.properties")).getPath());
 
+        final FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("main-view.fxml"));
+        final Scene scene = new Scene(fxmlLoader.load(), 320 * 3, 240 * 3);
+        mainController = fxmlLoader.getController();
 
-        FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("main-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 320 * 3, 240 * 3);
-
-        String cssy = Objects.requireNonNull(getClass().getResource("/css/font.css")).toExternalForm();
-        scene.getStylesheets().add(cssy);
-
+        final String styles = Objects.requireNonNull(getClass().getResource("/css/font.css")).toExternalForm();
+        scene.getStylesheets().add(styles);
 
         stage.setTitle("PNES");
         stage.setMaximized(true);
         mainJMetro.setScene(scene);
         stage.setScene(scene);
         stage.show();
-        mainStage = stage;
 
-        mainController = fxmlLoader.getController();
-
-        MainApp.centerPanel = new CenterPanel();
-
-
-        PanelManager.addCenterPanel(centerPanel);
-        PanelManager.addRightPanel(new PropertiesPanel());
-        PanelManager.addLeftPanel(new ProjectTreePanel());
+        // Initial for testing
+        final var net = new PetriNet();
+        {
+            final Place place1 = new Place(net);
+            final Place place2 = new Place(net);
+            final Place place3 = new Place(net);
+            final Place place4 = new Place(net);
+            place1.setTokens(2);
+            final Transition transition1 = new Transition(net);
+            final Transition transition2 = new Transition(net);
+            final Transition transition3 = new Transition(net);
+            place3.setTokens(1);
+            final Arc arc1 = new Arc(net, place1, transition1);
+            final Arc arc2 = new Arc(net, transition1, place2);
+            final Arc arc3 = new Arc(net, place2, transition2);
+            final Arc arc4 = new Arc(net, transition2, place1);
+            arc4.setWeight(2);
+            final Arc arc5 = new Arc(net, transition2, place3);
+            arc5.setWeight(2);
+            final Arc arc6 = new Arc(net, place2, transition3);
+            final Arc arc7 = new Arc(net, transition3, place4);
+            final Arc arc8 = new Arc(net, place3, transition2);
+            net.addElements(place1, place2, place3, place4, transition1, transition2, transition3, arc1, arc2, arc3, arc4, arc5, arc6, arc7, arc8);
+        }
+        mainController.open(new Session(net));
     }
-
 
     public static void main(String[] args) {
         launch();

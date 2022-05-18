@@ -7,6 +7,11 @@ public interface Undoable {
     String description();
 
     /**
+     * @return Detailed description of the action.
+     */
+    String details();
+
+    /**
      * Undoes the action.
      */
     void undo();

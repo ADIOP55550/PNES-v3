@@ -1,10 +1,15 @@
 package pl.edu.ur.pnes.editor.history;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.ArrayList;
 
 public class UndoHistory {
+    private final static Logger logger = LogManager.getLogger();
+
     ArrayList<Undoable> steps = new ArrayList<>();
-    int lastAppliedIndex = 0;
+    int lastAppliedIndex = -1;
 
     /**
      * @return How many steps can be undone.
@@ -33,7 +38,7 @@ public class UndoHistory {
      */
     public Undoable peekUndo(int n) {
         try {
-            return steps.get(lastAppliedIndex - n);
+            return steps.get(lastAppliedIndex - n + 1);
         }
         catch (IndexOutOfBoundsException e) {
             return null;
@@ -68,6 +73,7 @@ public class UndoHistory {
             steps.remove(i);
         }
         steps.add(step);
+        logger.debug("pushed #" + steps.size() + " " + step.details());
         lastAppliedIndex += 1;
     }
 
@@ -79,6 +85,7 @@ public class UndoHistory {
         final var step = peekUndo();
         if (step == null) return false;
         step.undo();
+        logger.debug("undid #" + (lastAppliedIndex + 1) + " " + step.details());
         lastAppliedIndex -= 1;
         return true;
     }
@@ -91,7 +98,30 @@ public class UndoHistory {
         final var step = peekRedo();
         if (step == null) return false;
         step.redo();
-        lastAppliedIndex -= 1;
+        lastAppliedIndex += 1;
+        logger.debug("redid #" + (lastAppliedIndex + 1) + " " + step.details());
         return true;
+    }
+
+    public String dumpToString(int limit) {
+        if (steps.size() == 0) {
+            return "(empty)";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (int i = Math.max(0, steps.size() - limit); i < steps.size(); i++) {
+            final Undoable step = steps.get(i);
+            builder.append('#');
+            builder.append(i + 1);
+            builder.append('\t');
+            builder.append(step.details());
+            if (i == lastAppliedIndex) {
+                builder.append("\t(current)");
+            }
+            else {
+                builder.append('\t');
+            }
+            builder.append('\n');
+        }
+        return builder.toString();
     }
 }
