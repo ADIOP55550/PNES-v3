@@ -73,46 +73,20 @@ public class Session {
      */
     public final ReadOnlyStringProperty nameProperty() {
         if (name == null) {
-            name = new ReadOnlyStringProperty() {
+            final var binding = new StringBinding() {
                 @Override
-                public Object getBean() {
-                    return null;
-                }
-                @Override
-                public String getName() {
-                    return "";
-                }
-
-                @Override
-                public String get() {
-                    if (getFile() == null) {
+                protected String computeValue() {
+                    if (getFile() == null)
                         return "(new)";
-                    }
-                    else {
+                    else
                         return getFile().getName() + (isModified() ? "(modified)" : "");
-                    }
-                }
-
-                @Override
-                public void addListener(ChangeListener<? super String> listener) {
-                    throw new UnsupportedOperationException();
-                }
-                @Override
-                public void removeListener(ChangeListener<? super String> listener) {
-                    throw new UnsupportedOperationException();
-                }
-
-                @Override
-                public void addListener(InvalidationListener listener) {
-                    fileProperty().addListener(listener);
-                    modifiedProperty().addListener(listener);
-                }
-                @Override
-                public void removeListener(InvalidationListener listener) {
-                    fileProperty().removeListener(listener);
-                    modifiedProperty().removeListener(listener);
                 }
             };
+            fileProperty().addListener(observable -> binding.invalidate());
+            modifiedProperty().addListener(observable -> binding.invalidate());
+            return new SimpleStringProperty() {{
+               bind(binding);
+            }};
         }
         return name;
     }
