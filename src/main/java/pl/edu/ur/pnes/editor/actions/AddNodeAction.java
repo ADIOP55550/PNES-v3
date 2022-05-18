@@ -1,5 +1,6 @@
 package pl.edu.ur.pnes.editor.actions;
 
+import javafx.geometry.Point3D;
 import pl.edu.ur.pnes.editor.history.UndoableAction;
 import pl.edu.ur.pnes.petriNet.Net;
 import pl.edu.ur.pnes.petriNet.Node;
@@ -10,10 +11,10 @@ import java.lang.reflect.InvocationTargetException;
 
 public class AddNodeAction extends UndoableAction {
     public final Net net;
-    public final double[] position;
+    public final Point3D position;
     public final Node node;
 
-    public AddNodeAction(Net net, Node node, double[] position) {
+    public AddNodeAction(Net net, Node node, Point3D position) {
         this.net = net;
         this.node = node;
         this.position = position;
@@ -26,7 +27,7 @@ public class AddNodeAction extends UndoableAction {
 
     @Override
     public String details() {
-        return "Add %s at (%f, %f)".formatted(getNodeTypeString(node), position[0], position[1]);
+        return "Add %s at (%f, %f)".formatted(getNodeTypeString(node), position.getX(), position.getY());
     }
 
     private String getNodeTypeString(Node node) {

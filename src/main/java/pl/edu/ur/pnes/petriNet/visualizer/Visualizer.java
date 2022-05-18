@@ -7,6 +7,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Point3D;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -32,6 +33,7 @@ import org.graphstream.ui.view.camera.Camera;
 import org.graphstream.ui.view.util.InteractiveElement;
 import pl.edu.ur.pnes.petriNet.*;
 import pl.edu.ur.pnes.petriNet.events.NetEvent;
+import pl.edu.ur.pnes.petriNet.utils.GraphStreamGlueUtils;
 import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
 import pl.edu.ur.pnes.petriNet.events.NodesMovedEvent;
 
@@ -65,7 +67,7 @@ class Visualizer {
     private final Map<Arc, Sprite> arcIdSpriteMap = new HashMap<>();
     private final Map<Arc, Sprite> arcWeightSpriteMap = new HashMap<>();
 
-    private double[] dragStartNodePosition;
+    private Point3D dragStartNodePosition;
 
     VisualizerEventsHandler getVisualizerEventsHandler() {
         return visualizerEventsHandler;
@@ -126,11 +128,7 @@ class Visualizer {
         this.visualizerEventsHandler.addEventHandler(VisualizerEvent.MOUSE_NODE_RELEASED, event -> {
             logger.debug("Node %s released".formatted(event.getClickedNodeId()));
             final var position = getNodePosition(event.getClickedNodeId());
-            final var offset = new double[] {
-                    position[0] - dragStartNodePosition[0],
-                    position[1] - dragStartNodePosition[1],
-                    position[2] - dragStartNodePosition[2],
-            };
+            final var offset = position.subtract(dragStartNodePosition);
 
             Node[] nodes;
             final var clickedNode = graph.getNode(event.getClickedNodeId());
@@ -143,7 +141,7 @@ class Visualizer {
                 nodes = new Node[] { (Node) net.getElementById(event.getClickedNodeId()).orElseThrow() };
             }
 
-            if (Math.abs(offset[0]) + Math.abs(offset[1]) > 0.001) {
+            if (Math.abs(offset.getX()) + Math.abs(offset.getY()) > 0.001) {
                 this.net.fireEvent(new NodesMovedEvent(nodes, offset));
             }
         });
@@ -369,7 +367,7 @@ class Visualizer {
         graphNode.setAttribute("ui.style", "size: " + sizeX + "gu, " + (graphNode.hasAttribute("isCircle") ? sizeX : sizeY) + "gu;");
         graphNode.setAttribute("ui.class", node.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
 
-        graphNode.setAttribute("xyz", node.getPosition().x, node.getPosition().y, node.getPosition().z);
+        setNodePosition(node.getId(), node.getPosition());
 
         Sprite nameSprite = getAttachedTextSprite(
                 node,
@@ -580,21 +578,21 @@ class Visualizer {
         return findGraphicElementAt(x, y, EnumSet.of(InteractiveElement.NODE));
     }
 
-    void setNodePosition(String id, double[] position) {
-        graph.getNode(id).setAttribute("xyz", position[0], position[1], position[2]);
+    void setNodePosition(String id, Point3D position) {
+        graph.getNode(id).setAttribute("xyz", position.getX(), position.getY(), position.getZ());
     }
-    public double[] getNodePosition(String id) {
-        return GraphPosLengthUtils.nodePosition(this.graph, id);
+    public Point3D getNodePosition(String id) {
+        return GraphStreamGlueUtils.position(GraphPosLengthUtils.nodePosition(this.graph, id));
     }
 
-    double[] mousePositionToGraphPosition(double[] mousePoint) {
+    Point3D mousePositionToGraphPosition(Point3D mousePoint) {
         final Point3 loVisible = view.getCamera().getMetrics().loVisible;
         final Point3 hiVisible = view.getCamera().getMetrics().hiVisible;
         final double inverseRatioPx2Gu = 1 / view.getCamera().getMetrics().ratioPx2Gu;
-        return new double[] {
-                loVisible.x + (mousePoint[0] * inverseRatioPx2Gu),
-                hiVisible.y - (mousePoint[1] * inverseRatioPx2Gu),
-                loVisible.z + (mousePoint[2] * inverseRatioPx2Gu)
-        };
+        return new Point3D(
+                loVisible.x + (mousePoint.getX() * inverseRatioPx2Gu),
+                hiVisible.y - (mousePoint.getY() * inverseRatioPx2Gu),
+                loVisible.z + (mousePoint.getZ() * inverseRatioPx2Gu)
+        );
     }
 }

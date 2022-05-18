@@ -1,5 +1,6 @@
 package pl.edu.ur.pnes.editor.actions;
 
+import javafx.geometry.Point3D;
 import pl.edu.ur.pnes.editor.history.UndoableAction;
 import pl.edu.ur.pnes.petriNet.Node;
 import pl.edu.ur.pnes.petriNet.Place;
@@ -12,9 +13,9 @@ import java.util.stream.Collectors;
 public class MoveNodesAction extends UndoableAction {
     public final VisualizerFacade visualizer;
     public final List<Node> nodes;
-    public final double[] offset;
+    public final Point3D offset;
 
-    public MoveNodesAction(VisualizerFacade visualizer, List<Node> nodes, double[] offset) {
+    public MoveNodesAction(VisualizerFacade visualizer, List<Node> nodes, Point3D offset) {
         this.visualizer = visualizer;
         this.nodes = nodes;
         this.offset = offset;
@@ -33,10 +34,10 @@ public class MoveNodesAction extends UndoableAction {
         if (nodes.size() > 1)
             return "Move %d nodes (".formatted(nodes.size())
                     + nodes.stream().map(Node::getName).collect(Collectors.joining(", "))
-                    + ") by (%f, %f)".formatted(offset[0], offset[1]);
+                    + ") by (%f, %f)".formatted(offset.getX(), offset.getY());
         else {
             final var node = nodes.get(0);
-            return "Move %s %s by (%f, %f)".formatted(getNodeTypeString(node), node.getName(), offset[0], offset[1]);
+            return "Move %s %s by (%f, %f)".formatted(getNodeTypeString(node), node.getName(), offset.getX(), offset.getY());
         }
     }
 
@@ -49,10 +50,7 @@ public class MoveNodesAction extends UndoableAction {
     @Override
     public void undo() {
         for (var node : nodes) {
-            double[] position = visualizer.getNodePosition(node);
-            position[0] -= offset[0];
-            position[1] -= offset[1];
-            visualizer.setNodePosition(node, position);
+            visualizer.setNodePosition(node, visualizer.getNodePosition(node).subtract(offset));
         }
         applied = false;
     }
@@ -60,10 +58,7 @@ public class MoveNodesAction extends UndoableAction {
     @Override
     public void redo() {
         for (var node : nodes) {
-            double[] position = visualizer.getNodePosition(node);
-            position[0] += offset[0];
-            position[1] += offset[1];
-            visualizer.setNodePosition(node, position);
+            visualizer.setNodePosition(node, visualizer.getNodePosition(node).add(offset));
         }
         applied = true;
     }

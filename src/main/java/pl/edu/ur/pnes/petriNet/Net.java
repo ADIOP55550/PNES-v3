@@ -4,9 +4,9 @@ import javafx.event.Event;
 import javafx.event.EventDispatchChain;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.geometry.Point3D;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.graphstream.ui.geom.Point3;
 import org.jetbrains.annotations.NotNull;
 import pl.edu.ur.pnes.petriNet.events.NetElementAddedEvent;
 import pl.edu.ur.pnes.petriNet.events.NetElementRemovedEvent;
@@ -88,12 +88,7 @@ public abstract class Net {
         Arrays.stream(elements).forEachOrdered(this::addElement);
     }
 
-    public void addElement(Node element, @NotNull Point3 position) {
-        element.setPosition(position);
-        addElement(element);
-    }
-
-    public void addElement(Node element, @NotNull double[] position) {
+    public void addElement(Node element, @NotNull Point3D position) {
         element.setPosition(position);
         addElement(element);
     }

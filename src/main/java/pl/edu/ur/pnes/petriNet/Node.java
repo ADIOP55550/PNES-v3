@@ -1,33 +1,29 @@
 package pl.edu.ur.pnes.petriNet;
 
-import org.graphstream.ui.geom.Point3;
+import javafx.geometry.Point3D;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class Node extends NetElement {
-    private Point3 position = new Point3(0, 0, 0);
+    private Point3D position = new Point3D(0, 0, 0);
 
     /**
      * Returns current position of the Node int the net.
      * Note that the position of the Node in the graph may be different.
-     * To get the position from the graph use {@link org.graphstream.graph.Node#getAttribute(String)}
-     * @return Point3 representing position of the Node in the net
+     * To get the position from the graph use {@link pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade#getNodePosition(Node)}
+     * @return Point3D representing position of the Node in the net
      */
-    public Point3 getPosition() {
+    public Point3D getPosition() {
         return position;
     }
 
     /**
      * Sets position of this Node
      * @pnes.CausesRedraw
-     * @param position Point3 representing the new node position
+     * @param position Point3D representing the new node position
      */
-    public void setPosition(@NotNull Point3 position) {
+    public void setPosition(@NotNull Point3D position) {
         this.position = position;
         this.needsRedraw.set(true);
-    }
-    
-    public void setPosition(@NotNull double[] position) {
-        setPosition(new Point3(position));
     }
 
     Node(Net net) {
