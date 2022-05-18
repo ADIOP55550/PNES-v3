@@ -20,6 +20,7 @@ import pl.edu.ur.pnes.editor.Session;
 import pl.edu.ur.pnes.ui.panels.CenterPanelController;
 import pl.edu.ur.pnes.ui.panels.ProjectTreePanelController;
 import pl.edu.ur.pnes.ui.panels.PropertiesPanelController;
+import pl.edu.ur.pnes.utils.SoundAlertUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -154,10 +155,14 @@ public class MainController implements Initializable {
 
     @FXML
     public void undoAction(ActionEvent event) {
-        getFocusedSession().undoHistory.undo();
+        if (!getFocusedSession().undoHistory.undo()) {
+            SoundAlertUtils.playWarning();
+        }
     }
     @FXML
     public void redoAction(ActionEvent event) {
-        getFocusedSession().undoHistory.redo();
+        if (!getFocusedSession().undoHistory.redo()) {
+            SoundAlertUtils.playWarning();
+        }
     }
 }
