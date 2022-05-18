@@ -20,7 +20,6 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.ui.fx_viewer.FxViewPanel;
 import org.graphstream.ui.fx_viewer.FxViewer;
-import org.graphstream.ui.fx_viewer.util.FxMouseOverMouseManager;
 import org.graphstream.ui.geom.Point2;
 import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
@@ -34,10 +33,9 @@ import org.graphstream.ui.view.util.InteractiveElement;
 import pl.edu.ur.pnes.petriNet.*;
 import pl.edu.ur.pnes.petriNet.events.NetEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
-import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.NodesMovedEvent;
+import pl.edu.ur.pnes.petriNet.events.NodesMovedEvent;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 class Visualizer {
@@ -134,18 +132,18 @@ class Visualizer {
                     position[2] - dragStartNodePosition[2],
             };
 
-            String[] nodesIds;
-            if (graph.getNode(event.getClickedNodeId()).hasAttribute("ui.selected")) {
+            Node[] nodes;
+            final var clickedNode = graph.getNode(event.getClickedNodeId());
+            if (clickedNode.hasAttribute("ui.selected") && false) { // TODO: remove that false when mouse manger allow moving multiple nodes at once.
                 // Moving selection
-                nodesIds = new String[] { event.getClickedNodeId() };
-                //final var nodesIds = (String[]) graph.nodes().map(Element::getId).toArray(); // TODO: to be used when mouse manger allow moving multiple nodes at once.
+                nodes = (Node[]) graph.nodes().map(Element::getId).map(id -> net.getElementById(id).orElseThrow()).toArray();
             }
             else {
                 // Outside selection
-                nodesIds = new String[] { event.getClickedNodeId() };
+                nodes = new Node[] { (Node) net.getElementById(event.getClickedNodeId()).orElseThrow() };
             }
 
-            this.visualizerEventsHandler.fireEvent(new NodesMovedEvent(nodesIds, offset));
+            this.net.fireEvent(new NodesMovedEvent(nodes, offset));
         });
 
         view.getCamera().setGraphViewport(0, 0, 100, 100);

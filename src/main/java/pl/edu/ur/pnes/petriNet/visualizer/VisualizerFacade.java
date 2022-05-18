@@ -73,6 +73,13 @@ public class VisualizerFacade {
         return visualizer.getNodePosition(id);
     }
 
+    public void setNodePosition(Node node, double[] xy) {
+        visualizer.setNodePosition(node.getId(), xy);
+    }
+    public double[] getNodePosition(Node node) {
+        return visualizer.getNodePosition(node.getId());
+    }
+
     public Optional<GraphicElement> findGraphicElementAt(double x, double y, EnumSet<InteractiveElement> elementType) {
         return visualizer.findGraphicElementAt(x, y, elementType);
     }

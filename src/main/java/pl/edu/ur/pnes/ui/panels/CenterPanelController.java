@@ -16,10 +16,11 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import pl.edu.ur.pnes.editor.Session;
 import pl.edu.ur.pnes.editor.actions.MoveNodesAction;
-import pl.edu.ur.pnes.editor.actions.AddPlaceAction;
+import pl.edu.ur.pnes.editor.actions.AddNodeAction;
 import pl.edu.ur.pnes.petriNet.Arc;
 import pl.edu.ur.pnes.petriNet.Transition;
 import pl.edu.ur.pnes.petriNet.*;
+import pl.edu.ur.pnes.petriNet.events.NetEvent;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFactory;
 import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;
@@ -173,8 +174,8 @@ public class CenterPanelController implements Initializable, Rooted {
         this.simulatorFacade = SimulatorFactory.create(net);
         visualizerFacade.visualizeNet(net);
 
-        visualizerFacade.addEventHandler(VisualizerEvent.NODES_MOVED, event -> {
-            session.undoHistory.push(new MoveNodesAction(visualizerFacade, Arrays.asList(event.nodesIds), event.offset) {{
+        net.addEventHandler(NetEvent.NODES_MOVED, event -> {
+            session.undoHistory.push(new MoveNodesAction(visualizerFacade, Arrays.asList(event.nodes), event.offset) {{
                 applied = true;
             }});
         });
@@ -255,8 +256,9 @@ public class CenterPanelController implements Initializable, Rooted {
         addPlaceButton.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 this.mouseEventEventHandler = mouseEvent -> {
+                    final var place = new Place(net);
                     getSession().undoHistory.push(
-                        new AddPlaceAction(net, visualizerFacade.mousePositionToGraphPosition(mouseEvent)) {{
+                        new AddNodeAction(net, place, visualizerFacade.mousePositionToGraphPosition(mouseEvent)) {{
                             apply();
                         }}
                     );
@@ -275,8 +277,12 @@ public class CenterPanelController implements Initializable, Rooted {
         addTransitionButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 this.mouseEventEventHandler = mouseEvent -> {
-                    Transition transition = new Transition(net);
-                    net.addElement(transition, visualizerFacade.mousePositionToGraphPosition(mouseEvent));
+                    final var transition = new Transition(net);
+                    getSession().undoHistory.push(
+                        new AddNodeAction(net, transition, visualizerFacade.mousePositionToGraphPosition(mouseEvent)) {{
+                            apply();
+                        }}
+                    );
                 };
                 graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
             } else {
