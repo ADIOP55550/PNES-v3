@@ -5,6 +5,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.scene.input.MouseEvent;
 import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.graphicGraph.GraphicElement;
 import org.graphstream.ui.view.util.InteractiveElement;
@@ -80,8 +81,12 @@ public class VisualizerFacade {
         return visualizer.findGraphicElementAt(x, y);
     }
 
-    public Point3 mousePositionToGraphPosition(Point3 mousePoint) {
+    public double[] mousePositionToGraphPosition(double[] mousePoint) {
         return visualizer.mousePositionToGraphPosition(mousePoint);
+    }
+
+    public double[] mousePositionToGraphPosition(MouseEvent mouseEvent) {
+        return visualizer.mousePositionToGraphPosition(new double[] { mouseEvent.getX(), mouseEvent.getY(), 0 });
     }
 
     public <T extends Event> void addEventHandler(EventType<T> eventType, EventHandler<? super T> eventHandler) {

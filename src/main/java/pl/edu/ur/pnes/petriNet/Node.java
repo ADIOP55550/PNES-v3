@@ -25,6 +25,10 @@ public abstract class Node extends NetElement {
         this.position = position;
         this.needsRedraw.set(true);
     }
+    
+    public void setPosition(@NotNull double[] position) {
+        setPosition(new Point3(position));
+    }
 
     Node(Net net) {
         super(net);

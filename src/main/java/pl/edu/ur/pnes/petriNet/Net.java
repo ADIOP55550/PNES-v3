@@ -93,6 +93,11 @@ public abstract class Net {
         addElement(element);
     }
 
+    public void addElement(Node element, @NotNull double[] position) {
+        element.setPosition(position);
+        addElement(element);
+    }
+
     public void addElement(NetElement element) {
         if (element instanceof Arc arc) {
             arcs.add(arc);

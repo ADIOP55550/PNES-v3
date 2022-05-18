@@ -16,11 +16,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import pl.edu.ur.pnes.editor.Session;
 import pl.edu.ur.pnes.editor.actions.MoveNodesAction;
+import pl.edu.ur.pnes.editor.actions.AddPlaceAction;
 import pl.edu.ur.pnes.petriNet.Arc;
-import pl.edu.ur.pnes.petriNet.PetriNet;
-import pl.edu.ur.pnes.petriNet.Place;
 import pl.edu.ur.pnes.petriNet.Transition;
-import org.graphstream.ui.geom.Point3;
 import pl.edu.ur.pnes.petriNet.*;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFactory;
@@ -32,7 +30,6 @@ import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOutEve
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOverEvent;
 import pl.edu.ur.pnes.ui.EditorMode;
 import pl.edu.ur.pnes.ui.utils.FXMLUtils;
-import pl.edu.ur.pnes.ui.utils.Populatable;
 import pl.edu.ur.pnes.ui.utils.Rooted;
 
 import java.awt.*;
@@ -177,7 +174,9 @@ public class CenterPanelController implements Initializable, Rooted {
         visualizerFacade.visualizeNet(net);
 
         visualizerFacade.addEventHandler(VisualizerEvent.NODES_MOVED, event -> {
-            session.undoHistory.push(new MoveNodesAction(visualizerFacade, Arrays.asList(event.nodesIds), event.offset));
+            session.undoHistory.push(new MoveNodesAction(visualizerFacade, Arrays.asList(event.nodesIds), event.offset) {{
+                applied = true;
+            }});
         });
 
         centerToolbarLeft.getChildren().add(layoutButton);
@@ -256,9 +255,11 @@ public class CenterPanelController implements Initializable, Rooted {
         addPlaceButton.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 this.mouseEventEventHandler = mouseEvent -> {
-                    Place place = new Place(net);
-                    Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
-                    net.addElement(place, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+                    getSession().undoHistory.push(
+                        new AddPlaceAction(net, visualizerFacade.mousePositionToGraphPosition(mouseEvent)) {{
+                            apply();
+                        }}
+                    );
                 };
                 graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
             } else {
@@ -275,8 +276,7 @@ public class CenterPanelController implements Initializable, Rooted {
             if (newValue) {
                 this.mouseEventEventHandler = mouseEvent -> {
                     Transition transition = new Transition(net);
-                    Point3 mousePoint = new Point3(mouseEvent.getX(), mouseEvent.getY(), 0);
-                    net.addElement(transition, visualizerFacade.mousePositionToGraphPosition(mousePoint));
+                    net.addElement(transition, visualizerFacade.mousePositionToGraphPosition(mouseEvent));
                 };
                 graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
             } else {
