@@ -73,7 +73,6 @@ public class CenterPanelController implements Initializable, Rooted {
     private final ToggleButton addPlaceButton = new ToggleButton("Place");
     private final ToggleButton addTransitionButton = new ToggleButton("Transition");
     private final ToggleButton addArcButton = new ToggleButton("Arc");
-    private final Button psabutton = new Button("PrintSelNodes");
     private final Button toggleModeButton = new Button("RUN mode 🏁");
     private final ToggleGroup addingGroup = new ToggleGroup();
 
@@ -222,7 +221,7 @@ public class CenterPanelController implements Initializable, Rooted {
 
         progressCircle.setProgress(0);
 
-        centerToolbarLeft.getChildren().addAll(toggleModeButton, psabutton);
+        centerToolbarLeft.getChildren().addAll(toggleModeButton);
         centerToolbarRight.getChildren().addAll(speedSlider, progressCircle, stepButton, playPauseButton, stopButton, addArcButton, addPlaceButton, addTransitionButton);
 
         simulatorFacade.setProgressCallback(value -> Platform.runLater(() -> progressCircle.setProgress(value)));
@@ -254,7 +253,6 @@ public class CenterPanelController implements Initializable, Rooted {
 
         // Add new Place on mouse point
         addPlaceButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
-
         addPlaceButton.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 this.mouseEventEventHandler = mouseEvent -> {
@@ -286,20 +284,12 @@ public class CenterPanelController implements Initializable, Rooted {
             }
         });
 
-
-        psabutton.setOnAction(event -> {
-            visualizerFacade.printSelectedNodes();
-        });
-
-
         /*
          * Set new Arc
          * If button is pressed, choose your first and second node to create arc
          */
         addArcButton.disableProperty().bind(editorMode.isNotEqualTo(EditorMode.EDIT));
-
         addArcButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
-
             if (newValue) {
                 this.clickedEventEventHandler = event -> {
                     event.consume();
