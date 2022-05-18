@@ -142,18 +142,18 @@ public abstract class Net {
 
     public void removeElement(NetElement element) {
         if (this.allElementsStream().anyMatch(v -> Objects.equals(v, element))) {
-            if (element instanceof Place) {
-                places.remove(element);
-                ((Place) element).inputs.forEach((transition, arc) -> this.removeElement(arc));
-                ((Place) element).outputs.forEach((transition, arc) -> this.removeElement(arc));
+            if (element instanceof Place place) {
+                places.remove(place);
+                place.inputs.forEach((transition, arc) -> this.removeElement(arc));
+                place.outputs.forEach((transition, arc) -> this.removeElement(arc));
             }
-            if (element instanceof Transition) {
-                transitions.remove(element);
-                ((Transition) element).inputs.forEach((transition, arc) -> this.removeElement(arc));
-                ((Transition) element).outputs.forEach((transition, arc) -> this.removeElement(arc));
+            if (element instanceof Transition transition) {
+                transitions.remove(transition);
+                transition.inputs.forEach((place, arc) -> this.removeElement(arc));
+                transition.outputs.forEach((place, arc) -> this.removeElement(arc));
             }
-            if (element instanceof Arc)
-                arcs.remove(element);
+            if (element instanceof Arc arc)
+                arcs.remove(arc);
             this.internalEventsHandler.fireEvent(new NetElementRemovedEvent(element));
         }
     }

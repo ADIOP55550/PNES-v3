@@ -505,8 +505,10 @@ class Visualizer {
         if (graphEdge == null)
             throw new IllegalArgumentException("Edge with id " + arc.getId() + " is not in the graph");
 
-        graph.removeEdge(graphEdge);
+        spriteManager.removeSprite(arcIdSpriteMap.remove(arc).getId());
+        spriteManager.removeSprite(arcWeightSpriteMap.remove(arc).getId());
 
+        graph.removeEdge(graphEdge);
     }
 
     private Sprite getAttachedTextSprite(NetElement element, String idAppendix, Point3 offset, String initialValue) {

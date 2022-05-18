@@ -3,6 +3,7 @@ package pl.edu.ur.pnes.ui.panels;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -15,6 +16,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import pl.edu.ur.pnes.editor.Session;
+import pl.edu.ur.pnes.editor.actions.AddArcAction;
 import pl.edu.ur.pnes.editor.actions.MoveNodesAction;
 import pl.edu.ur.pnes.editor.actions.AddNodeAction;
 import pl.edu.ur.pnes.petriNet.Arc;
@@ -29,6 +31,7 @@ import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeClickedEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOutEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOverEvent;
+import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeReleasedEvent;
 import pl.edu.ur.pnes.ui.EditorMode;
 import pl.edu.ur.pnes.ui.utils.FXMLUtils;
 import pl.edu.ur.pnes.ui.utils.Rooted;
@@ -102,6 +105,11 @@ public class CenterPanelController implements Initializable, Rooted {
             element.getClasses().remove("goodHover");
         });
     };
+
+    /**
+     * Used to consume visualizer mouse release events when in adding mode, to prevent false producing the nodes moved events.
+     */
+    private static final EventHandler<VisualizerMouseNodeReleasedEvent> nodeReleasedEventEventHandler = Event::consume;
 
     protected Session session;
 
@@ -315,8 +323,8 @@ public class CenterPanelController implements Initializable, Rooted {
                             return;
                         }
 
-                        Arc arc = new Arc(net, inputNode[0], outputNode[0]);
-                        net.addElement(arc);
+                        final var arc = new Arc(net, inputNode[0], outputNode[0]);
+                        getSession().undoHistory.push(new AddArcAction(net, arc) {{ apply(); }});
                         System.out.println("Got output node: " + el.get().getName());
 
                         // cleanup
@@ -340,6 +348,7 @@ public class CenterPanelController implements Initializable, Rooted {
                 visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
                 visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
                 visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
+                visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_RELEASED, nodeReleasedEventEventHandler);
             } else {
                 // cleanup
                 outputNode[0].getClasses().remove("badHover");
@@ -347,6 +356,7 @@ public class CenterPanelController implements Initializable, Rooted {
                 visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
                 visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
                 visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
+                visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_RELEASED, nodeReleasedEventEventHandler);
                 inputNode[0] = null;
             }
         });

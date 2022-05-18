@@ -2,6 +2,8 @@ package pl.edu.ur.pnes.editor.actions;
 
 import pl.edu.ur.pnes.editor.history.UndoableAction;
 import pl.edu.ur.pnes.petriNet.Node;
+import pl.edu.ur.pnes.petriNet.Place;
+import pl.edu.ur.pnes.petriNet.Transition;
 import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;
 
 import java.util.List;
@@ -32,8 +34,16 @@ public class MoveNodesAction extends UndoableAction {
             return "Move %d nodes (".formatted(nodes.size())
                     + nodes.stream().map(Node::getName).collect(Collectors.joining(", "))
                     + ") by (%f, %f)".formatted(offset[0], offset[1]);
-        else
-            return "Move node %s by (%f, %f)".formatted(nodes.get(0), offset[0], offset[1]);
+        else {
+            final var node = nodes.get(0);
+            return "Move %s %s by (%f, %f)".formatted(getNodeTypeString(node), node.getName(), offset[0], offset[1]);
+        }
+    }
+
+    private String getNodeTypeString(Node node) {
+        if (node instanceof Place)      return "place";
+        if (node instanceof Transition) return "transition";
+        return "node";
     }
 
     @Override
