@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import com.panemu.tiwulfx.control.dock.DetachableTabPane?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
-
-<?import com.panemu.tiwulfx.control.dock.DetachableTabPane?>
-
 <?import pl.edu.ur.pnes.ui.controls.Icon?>
-<?import javafx.scene.control.Label?>
-<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="pl.edu.ur.pnes.MainController">
 
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pl.edu.ur.pnes.MainController">
     <top>
         <VBox BorderPane.alignment="CENTER">
             <children>
@@ -25,17 +23,28 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="Close"/>
+                                <MenuItem mnemonicParsing="false" text="Close" />
                             </items>
                         </Menu>
-                        <Menu mnemonicParsing="false" text="Edit">
+                        <Menu mnemonicParsing="false" onHidden="#editMenuHiddenAction" onShowing="#editMenuShowingAction" text="Edit">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="Delete"/>
+                        <MenuItem fx:id="menuUndo" mnemonicParsing="false" onAction="#undoAction" text="Undo (...)">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="Z" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                           </accelerator>
+                        </MenuItem>
+                        <MenuItem fx:id="menuRedo" mnemonicParsing="false" onAction="#redoAction" text="Redo (...)">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="Y" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                           </accelerator>
+                        </MenuItem>
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                                <MenuItem mnemonicParsing="false" text="Delete" />
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="About"/>
+                                <MenuItem mnemonicParsing="false" text="About" />
                             </items>
                         </Menu>
                     </menus>
@@ -44,49 +53,48 @@
                     <children>
                         <HBox fx:id="mainToolbarLeft" spacing="5.0">
                             <children>
-                                <Button mnemonicParsing="false" text="Button"/>
-                                <Button mnemonicParsing="false" text="Button"/>
-                                <Button mnemonicParsing="false" styleClass="icon" text="&#xE806;"/>
-                                <Icon text="&#xE806;"/>
+                                <Button mnemonicParsing="false" text="Button" />
+                                <Button mnemonicParsing="false" text="Button" />
+                                <Button mnemonicParsing="false" styleClass="icon" text="" />
+                                <Icon text="" />
 
 
-                                <Button mnemonicParsing="false" text="s"/>
+                                <Button mnemonicParsing="false" text="s" />
                             </children>
                         </HBox>
-                        <Pane prefHeight="1.0" prefWidth="100.0" HBox.hgrow="ALWAYS"/>
+                        <Pane prefHeight="1.0" prefWidth="100.0" HBox.hgrow="ALWAYS" />
                         <HBox fx:id="mainToolbarRight" spacing="5.0">
                             <children>
-                                <Button mnemonicParsing="false" text="Button"/>
-                                <Button mnemonicParsing="false" text="Button"/>
+                                <Button mnemonicParsing="false" text="Button" />
+                                <Button mnemonicParsing="false" text="Button" />
                             </children>
                         </HBox>
                     </children>
                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                     </padding>
                 </HBox>
             </children>
         </VBox>
     </top>
     <center>
-        <SplitPane dividerPositions="0.18699186991869918, 0.7626016260162601" prefHeight="372.0" prefWidth="790.0"
-                   BorderPane.alignment="CENTER">
+        <SplitPane dividerPositions="0.18699186991869918, 0.7626016260162601" prefHeight="372.0" prefWidth="790.0" BorderPane.alignment="CENTER">
             <items>
                 <!--    <padding>-->
                 <!--        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />-->
                 <!--    </padding>-->
                 <SplitPane>
-                    <DetachableTabPane fx:id="leftTabPane"/>
+                    <DetachableTabPane fx:id="leftTabPane" />
                 </SplitPane>
                 <VBox>
                     <children>
                         <SplitPane VBox.vgrow="ALWAYS">
-                            <DetachableTabPane fx:id="centerTabPane" tabClosingPolicy="ALL_TABS"/>
+                            <DetachableTabPane fx:id="centerTabPane" tabClosingPolicy="ALL_TABS" />
                         </SplitPane>
                     </children>
                 </VBox>
                 <SplitPane>
-                    <DetachableTabPane fx:id="rightTabPane"/>
+                    <DetachableTabPane fx:id="rightTabPane" />
                 </SplitPane>
             </items>
         </SplitPane>

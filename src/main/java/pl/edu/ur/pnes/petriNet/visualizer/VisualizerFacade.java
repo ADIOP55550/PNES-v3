@@ -5,7 +5,8 @@ import javafx.beans.property.DoubleProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
-import org.graphstream.ui.geom.Point3;
+import javafx.geometry.Point3D;
+import javafx.scene.input.MouseEvent;
 import org.graphstream.ui.graphicGraph.GraphicElement;
 import org.graphstream.ui.view.util.InteractiveElement;
 import pl.edu.ur.pnes.petriNet.Net;
@@ -65,8 +66,18 @@ public class VisualizerFacade {
 
     }
 
-    public void setNodePosition(Node node, Point3 point3) {
-        visualizer.setNodePosition(node, point3);
+    public void setNodePosition(String id, Point3D xy) {
+        visualizer.setNodePosition(id, xy);
+    }
+    public Point3D getNodePosition(String id) {
+        return visualizer.getNodePosition(id);
+    }
+
+    public void setNodePosition(Node node, Point3D xy) {
+        visualizer.setNodePosition(node.getId(), xy);
+    }
+    public Point3D getNodePosition(Node node) {
+        return visualizer.getNodePosition(node.getId());
     }
 
     public Optional<GraphicElement> findGraphicElementAt(double x, double y, EnumSet<InteractiveElement> elementType) {
@@ -77,8 +88,12 @@ public class VisualizerFacade {
         return visualizer.findGraphicElementAt(x, y);
     }
 
-    public Point3 mousePositionToGraphPosition(Point3 mousePoint) {
+    public Point3D mousePositionToGraphPosition(Point3D mousePoint) {
         return visualizer.mousePositionToGraphPosition(mousePoint);
+    }
+
+    public Point3D mousePositionToGraphPosition(MouseEvent mouseEvent) {
+        return visualizer.mousePositionToGraphPosition(new Point3D(mouseEvent.getX(), mouseEvent.getY(), 0));
     }
 
     public <T extends Event> void addEventHandler(EventType<T> eventType, EventHandler<? super T> eventHandler) {

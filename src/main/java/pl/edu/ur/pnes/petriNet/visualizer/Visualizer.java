@@ -7,6 +7,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Point3D;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -15,12 +16,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.EdgeRejectedException;
+import org.graphstream.graph.Element;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.ui.fx_viewer.FxViewPanel;
 import org.graphstream.ui.fx_viewer.FxViewer;
 import org.graphstream.ui.geom.Point2;
 import org.graphstream.ui.geom.Point3;
+import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 import org.graphstream.ui.graphicGraph.GraphicElement;
 import org.graphstream.ui.graphicGraph.stylesheet.StyleConstants;
 import org.graphstream.ui.javafx.FxGraphRenderer;
@@ -30,7 +33,9 @@ import org.graphstream.ui.view.camera.Camera;
 import org.graphstream.ui.view.util.InteractiveElement;
 import pl.edu.ur.pnes.petriNet.*;
 import pl.edu.ur.pnes.petriNet.events.NetEvent;
+import pl.edu.ur.pnes.petriNet.utils.GraphStreamGlueUtils;
 import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
+import pl.edu.ur.pnes.petriNet.events.NodesMovedEvent;
 
 import java.util.*;
 
@@ -61,6 +66,8 @@ class Visualizer {
     private final Map<Node, Sprite> nodeIdSpriteMap = new HashMap<>();
     private final Map<Arc, Sprite> arcIdSpriteMap = new HashMap<>();
     private final Map<Arc, Sprite> arcWeightSpriteMap = new HashMap<>();
+
+    private Point3D dragStartNodePosition;
 
     VisualizerEventsHandler getVisualizerEventsHandler() {
         return visualizerEventsHandler;
@@ -112,15 +119,31 @@ class Visualizer {
         this.viewer = new FxViewer(graph, FxViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
         this.view = (FxViewPanel) viewer.addView(FxViewer.DEFAULT_VIEW_ID, renderer);
 
-        visualizerEventsHandler = new VisualizerEventsHandler(viewer);
+        visualizerEventsHandler = new VisualizerEventsHandler(viewer, graph);
 
-        // EXAMPLE VGVL EVENT HANDLER
         this.visualizerEventsHandler.addEventHandler(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
-            System.out.println("Node Clicked! (handler) #" + event.getClickedNodeId());
+            logger.debug("Node %s clicked".formatted(event.getClickedNodeId()));
+            dragStartNodePosition = getNodePosition(event.getClickedNodeId());
         });
-        // EXAMPLE VGVL EVENT FILTER
-        this.visualizerEventsHandler.addEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
-            System.out.println("Node Clicked! (filter) #" + event.getClickedNodeId());
+        this.visualizerEventsHandler.addEventHandler(VisualizerEvent.MOUSE_NODE_RELEASED, event -> {
+            logger.debug("Node %s released".formatted(event.getClickedNodeId()));
+            final var position = getNodePosition(event.getClickedNodeId());
+            final var offset = position.subtract(dragStartNodePosition);
+
+            Node[] nodes;
+            final var clickedNode = graph.getNode(event.getClickedNodeId());
+            if (clickedNode.hasAttribute("ui.selected") && false) { // TODO: remove that false when mouse manger allow moving multiple nodes at once.
+                // Moving selection
+                nodes = (Node[]) graph.nodes().map(Element::getId).map(id -> net.getElementById(id).orElseThrow()).toArray();
+            }
+            else {
+                // Outside selection
+                nodes = new Node[] { (Node) net.getElementById(event.getClickedNodeId()).orElseThrow() };
+            }
+
+            if (Math.abs(offset.getX()) + Math.abs(offset.getY()) > 0.001) {
+                this.net.fireEvent(new NodesMovedEvent(nodes, offset));
+            }
         });
 
         view.getCamera().setGraphViewport(0, 0, 100, 100);
@@ -201,6 +224,7 @@ class Visualizer {
         view.enableMouseOptions();
 //        equal to:
 //        viewer.getDefaultView().setMouseManager(new MouseOverMouseManager(EnumSet.of(InteractiveElement.EDGE, InteractiveElement.NODE, InteractiveElement.SPRITE)));
+//        viewer.getDefaultView().setMouseManager(new FxMouseOverMouseManager(EnumSet.of(InteractiveElement.EDGE, InteractiveElement.NODE, InteractiveElement.SPRITE)));
 
 
         view.getCamera().setAutoFitView(false);
@@ -343,7 +367,7 @@ class Visualizer {
         graphNode.setAttribute("ui.style", "size: " + sizeX + "gu, " + (graphNode.hasAttribute("isCircle") ? sizeX : sizeY) + "gu;");
         graphNode.setAttribute("ui.class", node.getClasses().stream().reduce("", (s, s2) -> s + ", " + s2));
 
-        graphNode.setAttribute("xyz", node.getPosition().x, node.getPosition().y, node.getPosition().z);
+        setNodePosition(node.getId(), node.getPosition());
 
         Sprite nameSprite = getAttachedTextSprite(
                 node,
@@ -460,6 +484,11 @@ class Visualizer {
         if (graphNode == null)
             throw new IllegalArgumentException("Node with id " + node.getId() + " is not in the graph");
 
+        spriteManager.removeSprite(nodeIdSpriteMap.remove(node).getId());
+        if (node instanceof Place place) {
+            spriteManager.removeSprite(placeTokensSpriteMap.remove(node).getId());
+        }
+
         graph.removeNode(graphNode);
     }
 
@@ -474,8 +503,10 @@ class Visualizer {
         if (graphEdge == null)
             throw new IllegalArgumentException("Edge with id " + arc.getId() + " is not in the graph");
 
-        graph.removeEdge(graphEdge);
+        spriteManager.removeSprite(arcIdSpriteMap.remove(arc).getId());
+        spriteManager.removeSprite(arcWeightSpriteMap.remove(arc).getId());
 
+        graph.removeEdge(graphEdge);
     }
 
     private Sprite getAttachedTextSprite(NetElement element, String idAppendix, Point3 offset, String initialValue) {
@@ -547,19 +578,21 @@ class Visualizer {
         return findGraphicElementAt(x, y, EnumSet.of(InteractiveElement.NODE));
     }
 
-    void setNodePosition(Node node, Point3 graphPoint) {
-        graph.getNode(node.getId()).setAttribute("xyz", graphPoint.x, graphPoint.y, graphPoint.z);
+    void setNodePosition(String id, Point3D position) {
+        graph.getNode(id).setAttribute("xyz", position.getX(), position.getY(), position.getZ());
+    }
+    public Point3D getNodePosition(String id) {
+        return GraphStreamGlueUtils.position(GraphPosLengthUtils.nodePosition(this.graph, id));
     }
 
-    Point3 mousePositionToGraphPosition(Point3 mousePoint) {
+    Point3D mousePositionToGraphPosition(Point3D mousePoint) {
         final Point3 loVisible = view.getCamera().getMetrics().loVisible;
         final Point3 hiVisible = view.getCamera().getMetrics().hiVisible;
         final double inverseRatioPx2Gu = 1 / view.getCamera().getMetrics().ratioPx2Gu;
-        return new Point3(
-                loVisible.x + (mousePoint.x * inverseRatioPx2Gu),
-                hiVisible.y - (mousePoint.y * inverseRatioPx2Gu),
-                loVisible.z + (mousePoint.z * inverseRatioPx2Gu)
+        return new Point3D(
+                loVisible.x + (mousePoint.getX() * inverseRatioPx2Gu),
+                hiVisible.y - (mousePoint.getY() * inverseRatioPx2Gu),
+                loVisible.z + (mousePoint.getZ() * inverseRatioPx2Gu)
         );
     }
-
 }

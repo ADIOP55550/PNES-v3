@@ -3,6 +3,7 @@ package pl.edu.ur.pnes.petriNet.visualizer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventDispatcher;
+import org.graphstream.graph.Graph;
 import org.graphstream.ui.view.Viewer;
 import pl.edu.ur.pnes.events.CompositeEventDispatcherWithHandlerManager;
 import pl.edu.ur.pnes.events.EventHandler;
@@ -18,9 +19,9 @@ final class VisualizerEventsHandler implements EventHandler<CompositeEventDispat
         graphstreamViewerListener = new GraphstreamViewerListener(this);
     }
 
-    public VisualizerEventsHandler(Viewer viewer) {
+    public VisualizerEventsHandler(Viewer viewer, Graph graph) {
         this();
-        graphstreamViewerListener.hookInto(viewer);
+        graphstreamViewerListener.hookInto(viewer, graph);
     }
 
     private CompositeEventDispatcherWithHandlerManager internalEventDispatcher;

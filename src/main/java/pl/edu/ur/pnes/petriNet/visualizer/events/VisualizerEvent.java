@@ -2,6 +2,7 @@ package pl.edu.ur.pnes.petriNet.visualizer.events;
 
 import javafx.event.Event;
 import javafx.event.EventType;
+import pl.edu.ur.pnes.petriNet.events.NodesMovedEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.attribute.VisualizerAttributeAddedEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.attribute.VisualizerAttributeChangedEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.attribute.VisualizerAttributeEvent;
@@ -29,7 +30,6 @@ public abstract class VisualizerEvent extends Event {
     public static EventType<VisualizerNetEvent> NET = new EventType<>(ANY, "NET");
     public static EventType<VisualizerNetElementAddedEvent> NET_ELEMENT_ADDED = new EventType<>(NET, "NET_ELEMENT_ADDED");
     public static EventType<VisualizerNetElementRemovedEvent> NET_ELEMENT_REMOVED = new EventType<>(NET, "NET_ELEMENT_REMOVED");
-
 
     public VisualizerEvent(EventType<? extends VisualizerEvent> eventType) {
         super(eventType);

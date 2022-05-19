@@ -2,42 +2,79 @@ package pl.edu.ur.pnes;
 
 import com.panemu.tiwulfx.control.dock.DetachableTabPane;
 import com.panemu.tiwulfx.control.dock.TabStageFactory;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.JMetroStyleClass;
 import jfxtras.styles.jmetro.Style;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import pl.edu.ur.pnes.editor.Session;
+import pl.edu.ur.pnes.ui.panels.CenterPanelController;
+import pl.edu.ur.pnes.ui.panels.ProjectTreePanelController;
+import pl.edu.ur.pnes.ui.panels.PropertiesPanelController;
+import pl.edu.ur.pnes.utils.SoundAlertUtils;
 
-import java.util.Arrays;
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
 import java.util.function.Function;
 
-import static pl.edu.ur.pnes.MainApp.mainJMetro;
+import static pl.edu.ur.pnes.MainApp.*;
 
-public class MainController {
-    @FXML
-    public DetachableTabPane leftTabPane;
-    @FXML
-    public DetachableTabPane centerTabPane;
-    @FXML
-    public DetachableTabPane rightTabPane;
+public class MainController implements Initializable {
+    private final static Logger logger = LogManager.getLogger();
 
-    @FXML
-    public HBox mainToolbarRight;
-    @FXML
-    public HBox mainToolbarLeft;
-    @FXML
-    public HBox mainToolbar;
+    Collection<Session> sessions = new ArrayList<>();
 
-    public void initialize() {
+    /**
+     * Opens new session, opening initial session-scoped panels.
+     * @param session Session to open.
+     * @return True if session was already open, false otherwise.
+     */
+    public boolean open(final Session session) throws IOException {
+        if (sessions.contains(session)) {
+            // TODO: focus most important panel related to the session
+            return false;
+        }
+        sessions.add(session);
 
+        final var panel = CenterPanelController.prepare(session);
+        final var tab = centerTabPane.addTab(session.getName(), panel.getRoot());
+        tab.textProperty().bind(session.nameProperty());
 
-//        add dark bg to the toolbar
+        return true;
+    }
+
+    public Session getFocusedSession() {
+        // TODO: implement it properly once multiple sessions are here
+        return sessions.stream().findFirst().orElseThrow();
+    }
+
+    public ProjectTreePanelController projectTreePanelController;
+    public PropertiesPanelController propertiesPanelController;
+
+    @FXML public DetachableTabPane leftTabPane;
+    @FXML public DetachableTabPane centerTabPane;
+    @FXML public DetachableTabPane rightTabPane;
+
+    @FXML public HBox mainToolbarRight;
+    @FXML public HBox mainToolbarLeft;
+    @FXML public HBox mainToolbar;
+
+    @FXML public MenuItem menuUndo;
+    @FXML public MenuItem menuRedo;
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
         mainToolbar.getStyleClass().add(JMetroStyleClass.BACKGROUND);
-
 
         final Function<Boolean, TabStageFactory> detachableStageFactoryFactory = (preventClosing) -> (detachableTabPane, tab) -> {
 
@@ -76,6 +113,11 @@ public class MainController {
             detachableTabPane.setStageFactory(detachableStageFactoryFactory.apply(false));
         }
 
+        // initialize common panels
+        projectTreePanelController = ProjectTreePanelController.prepare();
+        propertiesPanelController = PropertiesPanelController.prepare();
+        leftTabPane.addTab("Project tree", projectTreePanelController.getRoot());
+        rightTabPane.addTab("Properties", propertiesPanelController.getRoot());
 
         // button for changing theme
         Button button = (Button) mainToolbarLeft.getChildren().get(mainToolbarLeft.getChildren().size() - 1);
@@ -84,5 +126,57 @@ public class MainController {
             // invert style
             mainJMetro.setStyle(mainJMetro.getStyle() == Style.DARK ? Style.LIGHT : Style.DARK);
         });
+    }
+
+
+    /**
+     * Updates edit menu before showing.
+     */
+    @FXML
+    public void editMenuShowingAction(Event event) {
+        logger.debug("UndoHistory (on edit menu showing): " + getFocusedSession().undoHistory.dumpToString(10));
+
+        final var undoable = getFocusedSession().undoHistory.peekUndo();
+        if (undoable == null) {
+            menuUndo.setDisable(true);
+            menuUndo.setText("Undo (Nothing to undo)");
+        }
+        else {
+            menuUndo.setDisable(false);
+            menuUndo.setText("Undo (%s)".formatted(undoable.description()));
+        }
+
+        final var redoable = getFocusedSession().undoHistory.peekRedo();
+        if (redoable == null) {
+            menuRedo.setDisable(true);
+            menuRedo.setText("Redo (Nothing to redo)");
+        }
+        else {
+            menuRedo.setDisable(false);
+            menuRedo.setText("Redo (%s)".formatted(redoable.description()));
+        }
+    }
+
+    /**
+     * Updates edit menu after hidden.
+     */
+    @FXML
+    public void editMenuHiddenAction(Event event) {
+        // Make sure undo/redo are always enabled, so keyboard accelerator works
+        menuUndo.setDisable(false);
+        menuRedo.setDisable(false);
+    }
+
+    @FXML
+    public void undoAction(ActionEvent event) {
+        if (!getFocusedSession().undoHistory.undo()) {
+            SoundAlertUtils.playWarning();
+        }
+    }
+    @FXML
+    public void redoAction(ActionEvent event) {
+        if (!getFocusedSession().undoHistory.redo()) {
+            SoundAlertUtils.playWarning();
+        }
     }
 }
