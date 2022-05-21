@@ -112,7 +112,6 @@ class Visualizer {
     }
 
     Visualizer() {
-        System.out.println("System.getProperty(\"log4j2.configurationFile\") = " + System.getProperty("log4j2.configurationFile"));
         this.graph = new DefaultGraph("Graph 1");
         this.spriteManager = new SpriteManager(graph);
         this.renderer = new FxGraphRenderer();
@@ -290,13 +289,6 @@ class Visualizer {
                 originalViewCenter.y + -(dragStart.y - e.getScreenY()) * moveSpeed,
                 originalViewCenter.z
         );
-    }
-
-    public void printSelectedNodes() {
-        graph.nodes().forEach(node -> {
-            if (node.hasAttribute("ui.selected"))
-                System.out.println(node);
-        });
     }
 
     public void visualizeNet(Net net) {
@@ -514,9 +506,8 @@ class Visualizer {
     }
 
     private Sprite getAttachedTextSprite(NetElement element, String idAppendix, Point3 offset, String initialValue, List<String> uiClasses) {
-        System.out.println();
-        System.out.println("Visualizer.getAttachedTextSprite");
-        System.out.println("element = " + element + ", idAppendix = " + idAppendix + ", offset = " + offset + ", initialValue = " + initialValue + ", uiClasses = " + uiClasses);
+        logger.debug("Visualizer.getAttachedTextSprite");
+        logger.debug("element = " + element + ", idAppendix = " + idAppendix + ", offset = " + offset + ", initialValue = " + initialValue + ", uiClasses = " + uiClasses);
         // setting up sprite
         Sprite sprite = spriteManager.addSprite(element.getId() + idAppendix);
 

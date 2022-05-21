@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
+import org.apache.logging.log4j.LogManager;
 import pl.edu.ur.pnes.editor.Session;
 import pl.edu.ur.pnes.petriNet.Arc;
 import pl.edu.ur.pnes.petriNet.PetriNet;
@@ -24,7 +25,8 @@ public class MainApp extends Application {
     public void start(Stage stage) throws IOException {
         mainStage = stage;
 
-        System.setProperty("log4j2.configurationFile", Objects.requireNonNull(MainApp.class.getResource("/log4j2.properties")).getPath());
+//        System.setProperty("log4j2.configurationFile", Objects.requireNonNull(MainApp.class.getResource("/log4j2.properties")).getPath());
+
 
         final FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("main-view.fxml"));
         final Scene scene = new Scene(fxmlLoader.load(), 320 * 3, 240 * 3);

@@ -30,5 +30,8 @@ replay_pid*
 
 # End of https://www.toptal.com/developers/gitignore/api/java
 
+# Private configuration for log4j2 logging
+**/log4j2-test.properties
+
 # Folder for private stuff related to the project
 private

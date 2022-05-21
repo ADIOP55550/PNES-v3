@@ -13,6 +13,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pl.edu.ur.pnes.editor.Session;
 import pl.edu.ur.pnes.editor.actions.AddArcAction;
 import pl.edu.ur.pnes.editor.actions.MoveNodesAction;
@@ -44,6 +46,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class CenterPanelController implements Initializable, Rooted {
+    private final static Logger logger = LogManager.getLogger();
+
     @FXML VBox root;
     @Override
     public javafx.scene.Node getRoot() {
@@ -315,7 +319,7 @@ public class CenterPanelController implements Initializable, Rooted {
 
                         final var arc = new Arc(net, inputNode[0], outputNode[0]);
                         getSession().undoHistory.push(new AddArcAction(net, arc).andApply());
-                        System.out.println("Got output node: " + el.get().getName());
+                        logger.debug("[Adding arc] Got output node: " + el.get().getName());
 
                         // cleanup
                         outputNode[0].getClasses().remove("badHover");
@@ -329,7 +333,7 @@ public class CenterPanelController implements Initializable, Rooted {
                         if (el.isEmpty())
                             return;
                         inputNode[0] = net.getAllNodesStream().filter(v -> Objects.equals(v.getId(), el.get().getId())).findAny().orElseThrow();
-                        System.out.println("Got input node: " + el.get().getName());
+                        logger.debug("[Adding arc] Got input node: " + el.get().getName());
                     }
 
                 };

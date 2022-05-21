@@ -67,7 +67,7 @@ public abstract class NetElement {
         });
         classesList.addListener((ListChangeListener<? super String>) change -> {
             logger.info("Classes list changed!");
-            System.out.println("needs redraw before: " + needsRedraw.get());
+            logger.info("needs redraw before: " + needsRedraw.get());
             needsRedraw.set(true);
             logger.info("Now {} shall need redraw!", this.getName());
         });

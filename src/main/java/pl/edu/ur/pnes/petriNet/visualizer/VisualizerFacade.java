@@ -51,10 +51,6 @@ public class VisualizerFacade {
         visualizer.autoLayout.setValue(false);
     }
 
-    public void printSelectedNodes() {
-        visualizer.printSelectedNodes();
-    }
-
     /**
      * Sets graph background color
      * @param color new background color
