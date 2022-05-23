@@ -224,7 +224,12 @@ class Visualizer {
         view.getCamera().setAutoFitView(false);
         view.getCamera().setBounds(0, 0, 0, 100, 100, 100);
 
-        viewer.getDefaultView().setMouseManager(new MyMouseManager(EnumSet.of(InteractiveElement.EDGE, InteractiveElement.NODE, InteractiveElement.SPRITE)));
+        viewer.getDefaultView().setMouseManager(
+                new MyMouseManager(
+                        EnumSet.of(InteractiveElement.EDGE, InteractiveElement.NODE, InteractiveElement.SPRITE),
+                        100
+                )
+        );
 
         view.getCamera().setAutoFitView(false);
     }

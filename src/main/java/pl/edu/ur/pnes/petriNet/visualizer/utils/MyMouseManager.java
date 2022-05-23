@@ -9,7 +9,11 @@ import org.graphstream.ui.view.View;
 import org.graphstream.ui.view.util.InteractiveElement;
 import org.graphstream.ui.view.util.MouseManager;
 
+import java.util.Calendar;
 import java.util.EnumSet;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class MyMouseManager implements MouseManager {
     /**
@@ -30,28 +34,34 @@ public class MyMouseManager implements MouseManager {
     }
 
     public MyMouseManager() {
-        this(EnumSet.of(InteractiveElement.NODE, InteractiveElement.SPRITE));
+        this(EnumSet.of(InteractiveElement.NODE, InteractiveElement.SPRITE), 100);
     }
 
-    public MyMouseManager(EnumSet<InteractiveElement> types) {
+    public MyMouseManager(EnumSet<InteractiveElement> types, int hoverDelay) {
         this.types = types;
+        this.hoverDelay = hoverDelay;
     }
 
     @Override
     public void init(GraphicGraph graph, View view) {
         this.view = view;
         this.graph = graph;
-        view.addListener(MouseEvent.MOUSE_PRESSED, (EventHandler<MouseEvent>) this::onMousePressed);
-        view.addListener(MouseEvent.MOUSE_DRAGGED, (EventHandler<MouseEvent>) this::onMouseDragged);
+        view.addListener(MouseEvent.MOUSE_PRESSED,  (EventHandler<MouseEvent>) this::onMousePressed);
+        view.addListener(MouseEvent.MOUSE_DRAGGED,  (EventHandler<MouseEvent>) this::onMouseDragged);
         view.addListener(MouseEvent.MOUSE_RELEASED, (EventHandler<MouseEvent>) this::onMouseReleased);
+        view.addListener(MouseEvent.MOUSE_MOVED,    (EventHandler<MouseEvent>) this::onMouseMoved);
     }
 
     @Override
     public void release() {
-        view.removeListener(MouseEvent.MOUSE_PRESSED, (EventHandler<MouseEvent>) this::onMousePressed);
-        view.removeListener(MouseEvent.MOUSE_DRAGGED, (EventHandler<MouseEvent>) this::onMouseDragged);
-        view.removeListener(MouseEvent.MOUSE_RELEASED, (EventHandler<MouseEvent>) this::onMouseReleased);
+        view.removeListener(MouseEvent.MOUSE_PRESSED,   (EventHandler<MouseEvent>) this::onMousePressed);
+        view.removeListener(MouseEvent.MOUSE_DRAGGED,   (EventHandler<MouseEvent>) this::onMouseDragged);
+        view.removeListener(MouseEvent.MOUSE_RELEASED,  (EventHandler<MouseEvent>) this::onMouseReleased);
+        view.removeListener(MouseEvent.MOUSE_MOVED,     (EventHandler<MouseEvent>) this::onMouseMoved);
     }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Pressing, dragging, releasing
 
     protected GraphicElement element;
     protected double x1, y1;
@@ -167,5 +177,85 @@ public class MyMouseManager implements MouseManager {
         graph.sprites().filter(s -> s.hasAttribute("ui.selected")).forEach(s -> s.removeAttribute("ui.selected"));
         graph.edges().filter(e -> e.hasAttribute("ui.selected")).forEach(e -> e.removeAttribute("ui.selected"));
         element = null;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Mouse over and out
+
+    protected GraphicElement hoveredElement;
+    private long hoveredElementLastChanged;
+    protected ReentrantLock hoverLock = new ReentrantLock();
+    protected Timer hoverTimer = new Timer(true);
+    protected HoverTimerTask latestHoverTimerTask;
+
+    protected final long hoverDelay;
+
+    protected void onMouseMoved(MouseEvent event) {
+        try {
+            hoverLock.lockInterruptibly();
+            boolean stayedOnElement = false;
+            GraphicElement currentElement = view.findGraphicElementAt(getManagedTypes(),event.getX(), event.getY());
+            if (currentElement == null) {
+                if (hoveredElement != null) {
+                    onMouseOutElement(hoveredElement);
+                }
+            }
+            else {
+                if (!currentElement.equals(hoveredElement)) {
+                    if (hoveredElement != null) {
+                        onMouseOutElement(hoveredElement);
+                    }
+                    hoveredElement = currentElement;
+                    hoveredElementLastChanged = Calendar.getInstance().getTimeInMillis();
+                    if (latestHoverTimerTask != null) {
+                        latestHoverTimerTask.cancel();
+                    }
+                    latestHoverTimerTask = new HoverTimerTask(hoveredElementLastChanged, hoveredElement);
+                    hoverTimer.schedule(latestHoverTimerTask, hoverDelay);
+                }
+            }
+        }
+        catch (InterruptedException e) {
+            // Ignore
+        }
+        finally {
+            hoverLock.unlock();
+        }
+    }
+
+    protected void onMouseOverElement(GraphicElement element) {
+        if (!element.hasAttribute("ui.mouseOver")) {
+            element.setAttribute("ui.mouseOver");
+        }
+    }
+
+    protected void onMouseOutElement(GraphicElement element) {
+        if (element.hasAttribute("ui.mouseOver")) {
+            element.removeAttribute("ui.mouseOver");
+        }
+    }
+
+    private final class HoverTimerTask extends TimerTask {
+        private final long lastChanged;
+        private final GraphicElement element;
+
+        public HoverTimerTask(long lastChanged, GraphicElement element) {
+            this.lastChanged = lastChanged;
+            this.element = element;
+        }
+
+        @Override
+        public void run() {
+            try {
+                hoverLock.lock();
+                if (hoveredElementLastChanged == lastChanged) {
+                    onMouseOverElement(element);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            } finally {
+                hoverLock.unlock();
+            }
+        }
     }
 }
