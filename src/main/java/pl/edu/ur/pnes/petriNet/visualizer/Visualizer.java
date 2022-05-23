@@ -36,6 +36,7 @@ import pl.edu.ur.pnes.petriNet.events.NetEvent;
 import pl.edu.ur.pnes.petriNet.utils.GraphStreamGlueUtils;
 import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
 import pl.edu.ur.pnes.petriNet.events.NodesMovedEvent;
+import pl.edu.ur.pnes.petriNet.visualizer.utils.MyMouseManager;
 
 import java.util.*;
 
@@ -220,11 +221,7 @@ class Visualizer {
         view.getCamera().setAutoFitView(false);
         view.getCamera().setBounds(0, 0, 0, 100, 100, 100);
 
-        view.enableMouseOptions();
-//        equal to:
-//        viewer.getDefaultView().setMouseManager(new MouseOverMouseManager(EnumSet.of(InteractiveElement.EDGE, InteractiveElement.NODE, InteractiveElement.SPRITE)));
-//        viewer.getDefaultView().setMouseManager(new FxMouseOverMouseManager(EnumSet.of(InteractiveElement.EDGE, InteractiveElement.NODE, InteractiveElement.SPRITE)));
-
+        viewer.getDefaultView().setMouseManager(new MyMouseManager(EnumSet.of(InteractiveElement.EDGE, InteractiveElement.NODE, InteractiveElement.SPRITE)));
 
         view.getCamera().setAutoFitView(false);
     }
