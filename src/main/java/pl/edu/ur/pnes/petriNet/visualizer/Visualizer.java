@@ -132,9 +132,12 @@ class Visualizer {
 
             Node[] nodes;
             final var clickedNode = graph.getNode(event.getClickedNodeId());
-            if (clickedNode.hasAttribute("ui.selected") && false) { // TODO: remove that false when mouse manger allow moving multiple nodes at once.
+            if (clickedNode.hasAttribute("ui.selected")) {
                 // Moving selection
-                nodes = (Node[]) graph.nodes().map(Element::getId).map(id -> net.getElementById(id).orElseThrow()).toArray();
+                nodes = graph.nodes()
+                        .filter(n -> n.hasAttribute("ui.selected"))
+                        .map(gsn -> (Node) net.getElementById(gsn.getId()).orElseThrow())
+                        .toArray(Node[]::new);
             }
             else {
                 // Outside selection
