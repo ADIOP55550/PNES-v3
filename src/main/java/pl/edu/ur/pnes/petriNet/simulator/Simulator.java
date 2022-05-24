@@ -79,9 +79,21 @@ class Simulator {
 
 
     void automaticStep() {
+        try {
+            automaticStep(false);
+        } catch (TransitionCannotBeActivatedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void automaticStep(boolean throwIfCannotActivate) throws TransitionCannotBeActivatedException {
         this.logger.info("automatic step fired");
 
-        if (this.checkIfDone()) return;
+        if (this.checkIfDone()) {
+            if (throwIfCannotActivate)
+                throw new TransitionCannotBeActivatedException();
+            return;
+        }
 
         this.logger.debug("Can activate {} transitions", this.transitionsThatCanBeActivated.size());
 

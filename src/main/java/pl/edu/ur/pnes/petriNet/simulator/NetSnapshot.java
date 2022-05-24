@@ -16,6 +16,7 @@ import java.util.Map;
 public class NetSnapshot {
     private Integer netHashCode = null;
     private final Map<String, Object> tokens = new HashMap<>();
+    private boolean alreadyRestored = false;
 
     private static final Logger logger = LogManager.getLogger(NetSnapshot.class);
 
@@ -58,5 +59,11 @@ public class NetSnapshot {
             )
                     .setTokens(tokensCount);
         });
+
+        alreadyRestored = true;
+    }
+
+    public boolean isAlreadyRestored() {
+        return alreadyRestored;
     }
 }

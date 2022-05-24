@@ -1,6 +1,6 @@
 package pl.edu.ur.pnes.petriNet.netTypes.annotations;
 
-import pl.edu.ur.pnes.petriNet.NetGroup;
+import pl.edu.ur.pnes.petriNet.netTypes.NetGroup;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

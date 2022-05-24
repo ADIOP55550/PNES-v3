@@ -5,12 +5,17 @@ import javafx.beans.property.*;
 import javafx.scene.control.Alert;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pl.edu.ur.pnes.MainApp;
+import pl.edu.ur.pnes.editor.Mode;
+import pl.edu.ur.pnes.editor.Session;
 import pl.edu.ur.pnes.petriNet.Transition;
 
+import java.util.Optional;
 import java.util.function.DoubleConsumer;
 
 public class SimulatorFacade {
 
+    private final Session session;
     private NetSnapshot lastSnapshot = null;
 
     public enum AutoStepState {
@@ -64,8 +69,9 @@ public class SimulatorFacade {
      */
 
 
-    SimulatorFacade(Simulator simulator) {
+    SimulatorFacade(Simulator simulator, Session session) {
         this.simulator = simulator;
+        this.session = session;
         autoStepWaitDuration.addListener((observable, oldValue, newValue) -> stepCooldownCounter = (int) Math.floor(partCount.get()));
     }
 
@@ -92,10 +98,6 @@ public class SimulatorFacade {
     }
 
     private void displaySimulationDoneMessage() {
-        showDoneMessage();
-    }
-
-    private void showDoneMessage() {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setHeaderText("Nie można uruchomić już żadnej tranzycji");
         a.showAndWait();
@@ -121,8 +123,7 @@ public class SimulatorFacade {
                     break;
                 }
 
-                if (simulator.checkIfDone()) {
-                    setAutoStepState(AutoStepState.DONE);
+                if (autoStepState.get() == AutoStepState.DONE) {
                     fullStepIndicator();
                     stopClock();
                     return;
@@ -132,7 +133,14 @@ public class SimulatorFacade {
                 updateStepIndicator();
 
                 if (stepCooldownCounter == 0) {
-                    simulator.automaticStep();
+                    try {
+                        simulator.automaticStep(true);
+                    } catch (TransitionCannotBeActivatedException e) {
+                        setAutoStepState(AutoStepState.DONE);
+                        fullStepIndicator();
+                        stopClock();
+                        return;
+                    }
                     stepCooldownCounter = (int) partCount.get();
                 }
 
@@ -179,8 +187,16 @@ public class SimulatorFacade {
 
 
     public void stopAutoStep() {
-        if (getAutoStepState() == AutoStepState.STOPPED)
-            restoreLastSnapshotIfPossible();
+        if (getAutoStepState() == AutoStepState.STOPPED) {
+            if (Optional.ofNullable(lastSnapshot).map(NetSnapshot::isAlreadyRestored).orElse(false)) {
+                // When "STOP" is clicked and the net was already restored -> exit RUN mode
+                // that handles triple stop click
+                MainApp.mainController.getFocusedSession().mode().set(Mode.EDIT);
+                return;
+            } else
+                // that handles double stop click
+                restoreLastSnapshotIfPossible();
+        }
 
         resetStepIndicator();
         stopClock();
@@ -194,7 +210,7 @@ public class SimulatorFacade {
             case STOPPED, PAUSED -> startAutoStep();
             case DONE -> {
                 fullStepIndicator();
-                showDoneMessage();
+                displaySimulationDoneMessage();
             }
         }
     }

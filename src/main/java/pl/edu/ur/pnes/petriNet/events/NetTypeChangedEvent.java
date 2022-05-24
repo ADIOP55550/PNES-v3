@@ -1,6 +1,6 @@
 package pl.edu.ur.pnes.petriNet.events;
 
-import pl.edu.ur.pnes.petriNet.NetGroup;
+import pl.edu.ur.pnes.petriNet.netTypes.NetGroup;
 import pl.edu.ur.pnes.petriNet.netTypes.NetType;
 
 /**

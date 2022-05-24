@@ -1,6 +1,5 @@
 package pl.edu.ur.pnes.petriNet.netTypes;
 
-import pl.edu.ur.pnes.petriNet.NetGroup;
 import pl.edu.ur.pnes.petriNet.netTypes.annotations.UsedInNetType;
 
 import java.util.function.Predicate;
