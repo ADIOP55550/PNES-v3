@@ -2,6 +2,7 @@ package pl.edu.ur.pnes.editor;
 
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.*;
+import javafx.scene.control.Tab;
 import pl.edu.ur.pnes.editor.history.UndoHistory;
 import pl.edu.ur.pnes.petriNet.Net;
 import pl.edu.ur.pnes.petriNet.PetriNet;
@@ -19,6 +20,7 @@ public class Session {
     ////////////////////////////////////////////////////////////////////////////////
 
     ObjectProperty<Mode> modeProperty = new SimpleObjectProperty<>(Mode.EDIT);
+    private Tab uiTab;
 
     public ObjectProperty<Mode> mode() {
         return modeProperty;
@@ -110,6 +112,20 @@ public class Session {
             throw new IllegalStateException("Unnamed session needs to be 'saved as'.");
         }
         // TODO: saving
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    public void close() {
+        // TODO: close session
+    }
+
+    public Tab getUiTab() {
+        return uiTab;
+    }
+
+    public void setUiTab(Tab uiTab) {
+        this.uiTab = uiTab;
     }
 
     // TODO: load (from static function/factory)

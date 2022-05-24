@@ -1,6 +1,6 @@
 package pl.edu.ur.pnes.petriNet.netTypes.nonClassical.FPN;
 
-import static java.lang.Double.NaN;
+import java.util.function.DoubleBinaryOperator;
 
 /**
  * Any SNorm or TNorm
@@ -9,7 +9,5 @@ import static java.lang.Double.NaN;
  * @see pl.edu.ur.pnes.petriNet.netTypes.nonClassical.FPN.TNorm
  * @see <a href="https://en.wikipedia.org/wiki/Fuzzy_set_operations#Aggregation_operations">https://en.wikipedia.org/wiki/Fuzzy_set_operations#Aggregation_operations</a></a>
  */
-public interface Aggregation extends SNorm, TNorm {
-    double IDENTITY_ELEMENT = NaN;
-
+public abstract class Aggregation implements DoubleBinaryOperator {
 }

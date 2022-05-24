@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.scene.layout.Pane;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pl.edu.ur.pnes.editor.Session;
 
 import java.net.URL;
 import java.util.Objects;
@@ -11,9 +12,9 @@ import java.util.Objects;
 public class VisualizerFactory {
     private final Logger logger = LogManager.getLogger(VisualizerFactory.class);
 
-    public VisualizerFacade create(Pane parentNode, String cssResourceName) {
+    public VisualizerFacade create(Pane parentNode, String cssResourceName, Session session) {
 
-        var facade = new VisualizerFacade(new Visualizer());
+        var facade = new VisualizerFacade(new Visualizer(), session);
         Platform.runLater(() -> {
             Pane element =facade.visualizer.getElement();
             parentNode.getChildren().add(element);

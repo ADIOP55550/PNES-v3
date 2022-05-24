@@ -1,9 +1,9 @@
-package pl.edu.ur.pnes.petriNet;
+package pl.edu.ur.pnes.petriNet.netTypes;
 
 import pl.edu.ur.pnes.petriNet.netTypes.annotations.UsedInNetGroup;
 
 /**
- * Grous multiple {@link pl.edu.ur.pnes.petriNet.netTypes.NetType}s
+ * Groups multiple {@link pl.edu.ur.pnes.petriNet.netTypes.NetType}s
  * Allow for conditional enabling/disabling of fields when used with {@link UsedInNetGroup} and {@link pl.edu.ur.pnes.petriNet.netTypes.annotations.NotInNetGroup}
  *
  * @see pl.edu.ur.pnes.petriNet.netTypes.NetType

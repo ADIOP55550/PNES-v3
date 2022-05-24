@@ -9,6 +9,7 @@ import javafx.geometry.Point3D;
 import javafx.scene.input.MouseEvent;
 import org.graphstream.ui.graphicGraph.GraphicElement;
 import org.graphstream.ui.view.util.InteractiveElement;
+import pl.edu.ur.pnes.editor.Session;
 import pl.edu.ur.pnes.petriNet.Net;
 import pl.edu.ur.pnes.petriNet.NetElement;
 import pl.edu.ur.pnes.petriNet.Node;
@@ -20,9 +21,11 @@ import java.util.Optional;
 
 public class VisualizerFacade {
     final Visualizer visualizer;
+    private final Session session;
     private Net net;
 
-    VisualizerFacade(Visualizer visualizer) {
+    VisualizerFacade(Visualizer visualizer, Session session) {
+        this.session = session;
         this.visualizer = visualizer;
     }
 

@@ -1,20 +1,16 @@
 package pl.edu.ur.pnes.petriNet.netTypes.nonClassical.FPN;
 
-import java.util.function.DoubleBinaryOperator;
-
 /**
  * Represents S-Norm (T-conorm)
  *
  * @see Aggregation
  * @see <a href="https://en.wikipedia.org/wiki/T-norm#T-conorms">https://en.wikipedia.org/wiki/T-norm#T-conorms</a>
  */
-public interface SNorm extends DoubleBinaryOperator {
+public abstract class SNorm extends Aggregation {
     /**
      * IDENTITY ELEMENT for all S-Norms
      */
-    double IDENTITY_ELEMENT = 0;
+    public static final double IDENTITY_ELEMENT = 0;
 
-    Aggregation MIN_S_NORM = new MinSNorm();
-
-
+    public static final SNorm MIN_S_NORM = new MinSNorm();
 }

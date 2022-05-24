@@ -228,7 +228,12 @@ public abstract class Net {
                     .filter(t -> activationRule.test(t));
 
             case FPN -> getTransitions().stream()
-                    .filter(t -> t.getFuzzyInputValue() >= t.inputTreshold);
+                    .filter(t ->
+                            // there is at least one input with tokens > 0
+                            t.inputs.entrySet().stream().anyMatch(placeArcEntry -> placeArcEntry.getKey().getTokensAs(Double.class) > 0.000001)
+                                    // and input condition is satisfied
+                                    && t.getFuzzyInputValue() >= t.inputTreshold
+                    );
 
             //noinspection UnnecessaryDefault
             default -> throw new IllegalStateException("Unhandled net type");

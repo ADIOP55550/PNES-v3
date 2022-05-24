@@ -10,6 +10,7 @@ import javafx.geometry.Orientation;
 import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -19,8 +20,12 @@ import pl.edu.ur.pnes.editor.Session;
 import pl.edu.ur.pnes.editor.actions.AddArcAction;
 import pl.edu.ur.pnes.editor.actions.AddNodeAction;
 import pl.edu.ur.pnes.editor.actions.MoveNodesAction;
-import pl.edu.ur.pnes.petriNet.*;
+import pl.edu.ur.pnes.petriNet.Arc;
+import pl.edu.ur.pnes.petriNet.Node;
+import pl.edu.ur.pnes.petriNet.Place;
+import pl.edu.ur.pnes.petriNet.Transition;
 import pl.edu.ur.pnes.petriNet.events.NetEvent;
+import pl.edu.ur.pnes.petriNet.netTypes.NetGroup;
 import pl.edu.ur.pnes.petriNet.netTypes.NetType;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFactory;
@@ -38,11 +43,12 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.List;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class CenterPanelController implements Initializable, Rooted {
     @FXML
@@ -54,11 +60,18 @@ public class CenterPanelController implements Initializable, Rooted {
     }
 
     @FXML
-    public HBox centerToolbarRight;
+    public HBox primaryToolbarRight;
     @FXML
-    public HBox centerToolbarLeft;
+    public HBox primaryToolbarLeft;
     @FXML
-    public HBox centerToolbar;
+    public HBox primaryToolbar;
+
+    @FXML
+    public HBox secondaryToolbarRight;
+    @FXML
+    public HBox secondaryToolbarLeft;
+    @FXML
+    public HBox secondaryToolbar;
     @FXML
     public Pane graphPane;
 
@@ -78,8 +91,10 @@ public class CenterPanelController implements Initializable, Rooted {
     private final Button toggleModeButton = new Button("RUN mode 🏁");
     private final ToggleGroup addingGroup = new ToggleGroup();
 
-    public static final List<NetGroup> NET_GROUPS = List.of(NetGroup.CLASSICAL, NetGroup.NON_CLASSICAL);
-    public static final List<NetType> NET_TYPES = List.of(NetType.PN, NetType.FPN);
+    public static final EnumSet<NetType> NET_TYPES = EnumSet.allOf(NetType.class);
+    // only take groups that have at leas one net type
+    public static final EnumSet<NetGroup> NET_GROUPS = EnumSet.copyOf(NET_TYPES.stream().map(v -> v.netGroup).collect(Collectors.toSet()));
+
     final ChoiceBox<NetGroup> netGroupChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(NET_GROUPS));
     final ChoiceBox<NetType> netTypesChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(NET_TYPES));
 
@@ -226,8 +241,8 @@ public class CenterPanelController implements Initializable, Rooted {
 
 
         final var net = session.net;
-        this.visualizerFacade = new VisualizerFactory().create(graphPane, "/css/petri-net-graph.css");
-        this.simulatorFacade = SimulatorFactory.create(net);
+        this.visualizerFacade = new VisualizerFactory().create(graphPane, "/css/petri-net-graph.css", session);
+        this.simulatorFacade = SimulatorFactory.create(session);
         visualizerFacade.visualizeNet(net);
 
         net.addEventHandler(NetEvent.NODES_MOVED, event -> {
@@ -243,7 +258,6 @@ public class CenterPanelController implements Initializable, Rooted {
                 });
         });
 
-        centerToolbarLeft.getChildren().add(layoutButton);
         layoutButton.setOnAction(actionEvent -> {
             CompletableFuture.delayedExecutor(500, TimeUnit.MILLISECONDS).execute(() -> {
                 Platform.runLater(() -> {
@@ -284,8 +298,10 @@ public class CenterPanelController implements Initializable, Rooted {
 
         progressCircle.setProgress(0);
 
-        centerToolbarLeft.getChildren().addAll(toggleModeButton, netGroupChoiceBox, netTypesChoiceBox);
-        centerToolbarRight.getChildren().addAll(speedSlider, progressCircle, stepButton, playPauseButton, stopButton, addArcButton, addPlaceButton, addTransitionButton);
+        primaryToolbarLeft.getChildren().addAll(layoutButton, toggleModeButton, netGroupChoiceBox, netTypesChoiceBox);
+        primaryToolbarRight.getChildren().addAll(addArcButton, addPlaceButton, addTransitionButton);
+        secondaryToolbarLeft.getChildren().addAll();
+        secondaryToolbarRight.getChildren().addAll(speedSlider, progressCircle, stepButton, playPauseButton, stopButton);
 
         simulatorFacade.setProgressCallback(value -> Platform.runLater(() -> progressCircle.setProgress(value)));
 
@@ -319,6 +335,8 @@ public class CenterPanelController implements Initializable, Rooted {
         addPlaceButton.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 this.mouseEventEventHandler = mouseEvent -> {
+                    if (!mouseEvent.getButton().equals(MouseButton.PRIMARY))
+                        return;
                     final var place = new Place(net);
                     getSession().undoHistory.push(
                             new AddNodeAction(net, place, visualizerFacade.mousePositionToGraphPosition(mouseEvent)).andApply()
@@ -338,6 +356,8 @@ public class CenterPanelController implements Initializable, Rooted {
         addTransitionButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 this.mouseEventEventHandler = mouseEvent -> {
+                    if (!mouseEvent.getButton().equals(MouseButton.PRIMARY))
+                        return;
                     final var transition = new Transition(net);
                     getSession().undoHistory.push(
                             new AddNodeAction(net, transition, visualizerFacade.mousePositionToGraphPosition(mouseEvent)).andApply()

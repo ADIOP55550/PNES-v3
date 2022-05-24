@@ -2,6 +2,7 @@ package pl.edu.ur.pnes.petriNet;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import pl.edu.ur.pnes.petriNet.netTypes.NetGroup;
 import pl.edu.ur.pnes.petriNet.netTypes.NetType;
 import pl.edu.ur.pnes.petriNet.netTypes.annotations.UsedInNetGroup;
 import pl.edu.ur.pnes.petriNet.netTypes.annotations.UsedInNetType;

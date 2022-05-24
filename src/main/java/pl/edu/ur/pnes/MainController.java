@@ -19,6 +19,7 @@ import jfxtras.styles.jmetro.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pl.edu.ur.pnes.editor.Session;
+import pl.edu.ur.pnes.ui.controls.Icon;
 import pl.edu.ur.pnes.ui.panels.CenterPanelController;
 import pl.edu.ur.pnes.ui.panels.ProjectTreePanelController;
 import pl.edu.ur.pnes.ui.panels.PropertiesPanelController;
@@ -26,10 +27,13 @@ import pl.edu.ur.pnes.utils.SoundAlertUtils;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.ResourceBundle;
 import java.util.function.Function;
 
-import static pl.edu.ur.pnes.MainApp.*;
+import static pl.edu.ur.pnes.MainApp.mainJMetro;
 
 public class MainController implements Initializable {
     private final static Logger logger = LogManager.getLogger();
@@ -38,6 +42,7 @@ public class MainController implements Initializable {
 
     /**
      * Opens new session, opening initial session-scoped panels.
+     *
      * @param session Session to open.
      * @return True if session was already open, false otherwise.
      */
@@ -49,20 +54,41 @@ public class MainController implements Initializable {
         sessions.add(session);
         setFocusedSession(session);
 
+
         final var panel = CenterPanelController.prepare(session);
         final var tab = centerTabPane.addTab(session.getName(), panel.getRoot());
         tab.textProperty().bind(session.nameProperty());
+        tab.setUserData(session);
+        session.setUiTab(tab);
+
+
+        tab.setOnCloseRequest(event -> {
+            return;
+            // TDOO
+            /*
+            if(!session.isSaved){
+                alertresult = displayAlert()
+                if(alertresult=CANCEL)
+                    event.consume()
+            }
+             */
+        });
+
+        tab.setOnClosed(event -> session.close());
 
         return true;
     }
 
 
-    private final ObjectProperty<Session> focusedSession = new SimpleObjectProperty<>(null){
+    private final ObjectProperty<Session> focusedSession = new SimpleObjectProperty<>(null) {
         @Override
         public void set(Session newValue) {
+            if (newValue == null) {
+                super.set(null);
+                return;
+            }
             // TODO: here you can add code that runs when focused session changes
-            // e.g.
-            // this.focusTab(nevValue);
+            centerTabPane.getSelectionModel().select(newValue.getUiTab());
             super.set(newValue);
         }
     };
@@ -75,6 +101,12 @@ public class MainController implements Initializable {
         return focusedSession;
     }
 
+    {
+        focusedSession.addListener((observable, oldValue, newValue) -> {
+            logger.debug("Now focused: " + newValue);
+        });
+    }
+
     public void setFocusedSession(Session focusedSession) {
         this.focusedSession.set(focusedSession);
     }
@@ -82,20 +114,37 @@ public class MainController implements Initializable {
     public ProjectTreePanelController projectTreePanelController;
     public PropertiesPanelController propertiesPanelController;
 
-    @FXML public DetachableTabPane leftTabPane;
-    @FXML public DetachableTabPane centerTabPane;
-    @FXML public DetachableTabPane rightTabPane;
+    @FXML
+    public DetachableTabPane leftTabPane;
+    @FXML
+    public DetachableTabPane centerTabPane;
+    @FXML
+    public DetachableTabPane rightTabPane;
 
-    @FXML public HBox mainToolbarRight;
-    @FXML public HBox mainToolbarLeft;
-    @FXML public HBox mainToolbar;
+    @FXML
+    public HBox mainToolbarRight;
+    @FXML
+    public HBox mainToolbarLeft;
+    @FXML
+    public HBox mainToolbar;
 
-    @FXML public MenuItem menuUndo;
-    @FXML public MenuItem menuRedo;
+    @FXML
+    public MenuItem menuUndo;
+    @FXML
+    public MenuItem menuRedo;
+
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         mainToolbar.getStyleClass().add(JMetroStyleClass.BACKGROUND);
+
+        centerTabPane.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            final Object data = newValue.getUserData();
+            if (data instanceof Session session)
+                focusedSession.set(session);
+            else
+                focusedSession.set(null);
+        });
 
         final Function<Boolean, TabStageFactory> detachableStageFactoryFactory = (preventClosing) -> (detachableTabPane, tab) -> {
 
@@ -141,12 +190,25 @@ public class MainController implements Initializable {
         rightTabPane.addTab("Properties", propertiesPanelController.getRoot());
 
         // button for changing theme
-        Button button = (Button) mainToolbarLeft.getChildren().get(mainToolbarLeft.getChildren().size() - 1);
-        button.setText("Surprise! 🎁");
-        button.setOnAction(actionEvent -> {
+        Button changeThemeButton = new Button("Surprise! 🎁");
+        changeThemeButton.setOnAction(actionEvent -> {
             // invert style
             mainJMetro.setStyle(mainJMetro.getStyle() == Style.DARK ? Style.LIGHT : Style.DARK);
         });
+
+        // new file button
+        Button newFileButton = new Button();
+        newFileButton.setGraphic(new Icon("\ue812"));
+        newFileButton.setOnAction(event -> {
+            try {
+                open(new Session());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+
+        mainToolbarLeft.getChildren().addAll(changeThemeButton, newFileButton);
     }
 
 
@@ -161,8 +223,7 @@ public class MainController implements Initializable {
         if (undoable == null) {
             menuUndo.setDisable(true);
             menuUndo.setText("Undo (Nothing to undo)");
-        }
-        else {
+        } else {
             menuUndo.setDisable(false);
             menuUndo.setText("Undo (%s)".formatted(undoable.description()));
         }
@@ -171,8 +232,7 @@ public class MainController implements Initializable {
         if (redoable == null) {
             menuRedo.setDisable(true);
             menuRedo.setText("Redo (Nothing to redo)");
-        }
-        else {
+        } else {
             menuRedo.setDisable(false);
             menuRedo.setText("Redo (%s)".formatted(redoable.description()));
         }
@@ -194,6 +254,7 @@ public class MainController implements Initializable {
             SoundAlertUtils.playWarning();
         }
     }
+
     @FXML
     public void redoAction(ActionEvent event) {
         if (!getFocusedSession().undoHistory.redo()) {

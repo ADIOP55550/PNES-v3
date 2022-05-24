@@ -1,6 +1,6 @@
 package pl.edu.ur.pnes.petriNet.netTypes.nonClassical.FPN;
 
-class MinSNorm implements Aggregation {
+class MinSNorm extends SNorm {
     @Override
     public double applyAsDouble(double left, double right) {
         return Math.min(left, right);
