@@ -10,7 +10,6 @@ import pl.edu.ur.pnes.petriNet.Transition;
 
 import java.util.Objects;
 import java.util.Random;
-import java.util.function.DoubleBinaryOperator;
 
 class Simulator {
 
@@ -20,8 +19,6 @@ class Simulator {
     private final Logger logger = LogManager.getLogger(Simulator.class);
     private Transition lastActivatedTransitions = null;
     final ObservableList<Transition> transitionsThatCanBeActivated = FXCollections.observableArrayList();
-    private DoubleBinaryOperator adder = (left, right) -> left + right;
-    private DoubleBinaryOperator subtractor = (left, right) -> left - right;
 
     public Simulator(Net net) {
         this.net = net;
@@ -36,13 +33,6 @@ class Simulator {
         });
     }
 
-    public void setSubtractor(DoubleBinaryOperator subtractor) {
-        this.subtractor = subtractor;
-    }
-
-    public void setAdder(DoubleBinaryOperator adder) {
-        this.adder = adder;
-    }
 
     void fireTransition(Transition transition) throws TransitionCannotBeActivatedException {
         logger.info("Transition fired! " + transition.getName());
@@ -60,12 +50,27 @@ class Simulator {
 
         transition.inputs.forEach((place, arc) -> {
             logger.debug("changing input Place " + place.getName());
-            place.setTokens(this.subtractor.applyAsDouble(place.getTokens(), arc.getWeight()));
+            switch (net.getNetType()) {
+                case PN -> {
+                    place.setTokensAs(Integer.class, transition.getSubtractor().applyAsInt(place.getTokensAs(Integer.class), (int) arc.getWeight()));
+                }
+                case FPN -> {
+                    if (net.getRemoveInputsOnTransitionFire())
+                        place.setTokensAs(Double.class, 0d);
+                }
+            }
         });
 
         transition.outputs.forEach((place, arc) -> {
             logger.debug("changing output Place " + place.getName());
-            place.setTokens(this.adder.applyAsDouble(place.getTokens(), arc.getWeight()));
+            switch (net.getNetType()) {
+                case PN -> {
+                    place.setTokensAs(Integer.class, transition.getAdder().applyAsInt(place.getTokensAs(Integer.class), (int) arc.getWeight()));
+                }
+                case FPN -> {
+                    place.setTokensAs(Double.class, transition.outputSNorm.applyAsDouble(transition.getFuzzyOutputValue() * arc.getWeight(), place.getTokensAs(Double.class)));
+                }
+            }
         });
 
         lastActivatedTransitions = transition;

@@ -1,5 +1,6 @@
 package pl.edu.ur.pnes.petriNet.visualizer;
 
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -33,9 +34,9 @@ import org.graphstream.ui.view.camera.Camera;
 import org.graphstream.ui.view.util.InteractiveElement;
 import pl.edu.ur.pnes.petriNet.*;
 import pl.edu.ur.pnes.petriNet.events.NetEvent;
+import pl.edu.ur.pnes.petriNet.events.NodesMovedEvent;
 import pl.edu.ur.pnes.petriNet.utils.GraphStreamGlueUtils;
 import pl.edu.ur.pnes.petriNet.visualizer.events.VisualizerEvent;
-import pl.edu.ur.pnes.petriNet.events.NodesMovedEvent;
 
 import java.util.*;
 
@@ -135,10 +136,9 @@ class Visualizer {
             if (clickedNode.hasAttribute("ui.selected") && false) { // TODO: remove that false when mouse manger allow moving multiple nodes at once.
                 // Moving selection
                 nodes = (Node[]) graph.nodes().map(Element::getId).map(id -> net.getElementById(id).orElseThrow()).toArray();
-            }
-            else {
+            } else {
                 // Outside selection
-                nodes = new Node[] { (Node) net.getElementById(event.getClickedNodeId()).orElseThrow() };
+                nodes = new Node[]{(Node) net.getElementById(event.getClickedNodeId()).orElseThrow()};
             }
 
             if (Math.abs(offset.getX()) + Math.abs(offset.getY()) > 0.001) {
@@ -350,7 +350,7 @@ class Visualizer {
      * Sets its ui.style based on the class
      * <p>
      * Adds listener to the {@link Node#nameProperty()}
-     * If of type {@link Place}, adds listener to the {@link Place#tokensProperty()}
+     * If of type {@link Place}, adds listener to the {@link Place#tokensPropertyAs(Class)} ()}
      * By default, tokens sprite is shown only when tokens value is greater than 0.
      *
      * @param node Node to be added
@@ -389,17 +389,30 @@ class Visualizer {
                     place,
                     "tokens",
                     Point3.NULL_POINT3,
-                    String.valueOf(place.getTokens()),
+                    place.getTokensAsString(),
                     List.of("tokens")
             );
 
             // attach listener for future label changes
             place.tokensProperty().addListener((observableValue, oldVal, newVal) -> {
-                logger.debug("New value for sprite {}: {}", tokensSprite.getId(), newVal);
-                tokensSprite.setAttribute("ui.label", newVal);
+                logger.debug("New value for sprite {}: {}", tokensSprite.getId(), newVal.toString());
+                tokensSprite.setAttribute("ui.label", newVal.toString());
             });
 
-            showSpriteConditionally(tokensSprite, place.tokensProperty().isNotEqualTo(0));
+            BooleanBinding showTokensSprite = new BooleanBinding() {
+                @Override
+                protected boolean computeValue() {
+                    return switch (net.getNetType()) {
+                        case PN -> place.getTokensAs(Integer.class) != 0;
+                        case FPN -> place.getTokensAs(Double.class) > 0.000000001;
+                    };
+                }
+            };
+
+            place.tokensProperty().addListener(observable -> showTokensSprite.invalidate());
+            net.addEventHandler(NetEvent.TYPE_CHANGED, event -> showTokensSprite.invalidate());
+
+            showSpriteConditionally(tokensSprite, showTokensSprite);
 
             placeTokensSpriteMap.put(place, tokensSprite);
         }
@@ -581,6 +594,7 @@ class Visualizer {
     void setNodePosition(String id, Point3D position) {
         graph.getNode(id).setAttribute("xyz", position.getX(), position.getY(), position.getZ());
     }
+
     public Point3D getNodePosition(String id) {
         return GraphStreamGlueUtils.position(GraphPosLengthUtils.nodePosition(this.graph, id));
     }

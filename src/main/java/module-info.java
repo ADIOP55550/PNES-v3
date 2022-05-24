@@ -20,11 +20,13 @@ module pl.edu.ur.pnes {
     exports pl.edu.ur.pnes.ui.panels;
     exports pl.edu.ur.pnes.ui.controls;
     exports pl.edu.ur.pnes.petriNet;
+    exports pl.edu.ur.pnes.petriNet.netTypes.nonClassical.FPN;
     exports pl.edu.ur.pnes.petriNet.simulator;
     exports pl.edu.ur.pnes.petriNet.events;
     exports pl.edu.ur.pnes.ui.utils;
     opens pl.edu.ur.pnes.ui.utils to javafx.fxml;
     opens pl.edu.ur.pnes.editor to javafx.fxml;
+    exports pl.edu.ur.pnes.petriNet.netTypes;
 
 //    exports com.sun.javafx.logging;
 }

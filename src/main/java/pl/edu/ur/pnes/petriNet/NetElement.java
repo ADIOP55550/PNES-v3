@@ -17,7 +17,7 @@ import java.util.Objects;
 public abstract class NetElement {
     private final Logger logger = LogManager.getLogger(NetElement.class);
     public final StringProperty label = new SimpleStringProperty();
-    private final Net net;
+    protected final Net net;
     private final String id;
     private final StringProperty name = new SimpleStringProperty() {
         @Override

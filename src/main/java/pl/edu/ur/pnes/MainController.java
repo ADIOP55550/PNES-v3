@@ -2,6 +2,8 @@ package pl.edu.ur.pnes;
 
 import com.panemu.tiwulfx.control.dock.DetachableTabPane;
 import com.panemu.tiwulfx.control.dock.TabStageFactory;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -45,6 +47,7 @@ public class MainController implements Initializable {
             return false;
         }
         sessions.add(session);
+        setFocusedSession(session);
 
         final var panel = CenterPanelController.prepare(session);
         final var tab = centerTabPane.addTab(session.getName(), panel.getRoot());
@@ -53,9 +56,27 @@ public class MainController implements Initializable {
         return true;
     }
 
+
+    private final ObjectProperty<Session> focusedSession = new SimpleObjectProperty<>(null){
+        @Override
+        public void set(Session newValue) {
+            // TODO: here you can add code that runs when focused session changes
+            // e.g.
+            // this.focusTab(nevValue);
+            super.set(newValue);
+        }
+    };
+
     public Session getFocusedSession() {
-        // TODO: implement it properly once multiple sessions are here
-        return sessions.stream().findFirst().orElseThrow();
+        return focusedSession.get();
+    }
+
+    public ObjectProperty<Session> focusedSessionProperty() {
+        return focusedSession;
+    }
+
+    public void setFocusedSession(Session focusedSession) {
+        this.focusedSession.set(focusedSession);
     }
 
     public ProjectTreePanelController projectTreePanelController;

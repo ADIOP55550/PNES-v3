@@ -1,6 +1,7 @@
 package pl.edu.ur.pnes.ui.panels;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -13,14 +14,14 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import pl.edu.ur.pnes.editor.Mode;
 import pl.edu.ur.pnes.editor.Session;
 import pl.edu.ur.pnes.editor.actions.AddArcAction;
-import pl.edu.ur.pnes.editor.actions.MoveNodesAction;
 import pl.edu.ur.pnes.editor.actions.AddNodeAction;
-import pl.edu.ur.pnes.petriNet.Arc;
-import pl.edu.ur.pnes.petriNet.Transition;
+import pl.edu.ur.pnes.editor.actions.MoveNodesAction;
 import pl.edu.ur.pnes.petriNet.*;
 import pl.edu.ur.pnes.petriNet.events.NetEvent;
+import pl.edu.ur.pnes.petriNet.netTypes.NetType;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
 import pl.edu.ur.pnes.petriNet.simulator.SimulatorFactory;
 import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;
@@ -30,7 +31,6 @@ import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeClicke
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOutEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeOverEvent;
 import pl.edu.ur.pnes.petriNet.visualizer.events.mouse.VisualizerMouseNodeReleasedEvent;
-import pl.edu.ur.pnes.editor.Mode;
 import pl.edu.ur.pnes.ui.utils.FXMLUtils;
 import pl.edu.ur.pnes.ui.utils.Rooted;
 
@@ -38,13 +38,16 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class CenterPanelController implements Initializable, Rooted {
-    @FXML VBox root;
+    @FXML
+    VBox root;
+
     @Override
     public javafx.scene.Node getRoot() {
         return root;
@@ -74,6 +77,20 @@ public class CenterPanelController implements Initializable, Rooted {
     private final ToggleButton addArcButton = new ToggleButton("Arc");
     private final Button toggleModeButton = new Button("RUN mode 🏁");
     private final ToggleGroup addingGroup = new ToggleGroup();
+
+    public static final List<NetGroup> NET_GROUPS = List.of(NetGroup.CLASSICAL, NetGroup.NON_CLASSICAL);
+    public static final List<NetType> NET_TYPES = List.of(NetType.PN, NetType.FPN);
+    final ChoiceBox<NetGroup> netGroupChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(NET_GROUPS));
+    final ChoiceBox<NetType> netTypesChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(NET_TYPES));
+
+    {
+        netGroupChoiceBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+            netTypesChoiceBox.getItems().setAll(NET_TYPES.stream().filter(t -> t.netGroup == newValue).toList());
+            netTypesChoiceBox.getSelectionModel().selectFirst();
+        });
+
+        netGroupChoiceBox.getSelectionModel().selectFirst();
+    }
 
     private final double MIN_SLIDER_DURATION = 100;
     private final double MAX_SLIDER_DURATION = 5000;
@@ -118,6 +135,7 @@ public class CenterPanelController implements Initializable, Rooted {
 
     /**
      * Loads new instance of the panel to represent specified session.
+     *
      * @param session Session represented by the panel.
      */
     static public CenterPanelController prepare(final Session session) {
@@ -154,6 +172,40 @@ public class CenterPanelController implements Initializable, Rooted {
             }
         });
 
+        // when net type changes, update UI
+        session.net.netTypeProperty().addListener((observable, oldValue, newValue) -> {
+            netGroupChoiceBox.setValue(newValue.netGroup);
+        });
+
+        // don't allow to change net type during RUN
+        netTypesChoiceBox.disableProperty().bind(session.mode().isNotEqualTo(Mode.EDIT));
+        netGroupChoiceBox.disableProperty().bind(session.mode().isNotEqualTo(Mode.EDIT));
+
+        // when net type changed in UI
+        netTypesChoiceBox.setOnAction(event -> {
+            // prevent dialog when nothing changed
+            if (netTypesChoiceBox.getSelectionModel().getSelectedItem().equals(session.net.getNetType()))
+                return;
+
+            // Warn user
+            Alert a = new Alert(Alert.AlertType.WARNING, "Zmaina typu sieci może spowodować utratę niektórych informacji o sieci, czy chcesz kontynuować?", ButtonType.YES, ButtonType.CANCEL);
+            a.setHeaderText("Ta akcja może spowodować utratę danych!");
+            var result = a.showAndWait();
+
+            result.ifPresent(buttonType -> {
+                if (buttonType.equals(ButtonType.YES))
+                    // Confirmed, change net type
+                    Platform.runLater(() -> {
+                        session.net.setNetType(netTypesChoiceBox.getValue());
+                    });
+                else Platform.runLater(() -> {
+                    // Restore previous ChoiceBox values
+                    netGroupChoiceBox.setValue(session.net.getNetType().netGroup);
+                    netTypesChoiceBox.setValue(session.net.getNetType());
+                });
+            });
+        });
+
         graphPane.setOnMousePressed(mouseEvent -> {
             if (mouseEvent.isControlDown() || mouseEvent.isMiddleButtonDown())
                 graphPane.setCursor(Cursor.MOVE);
@@ -182,6 +234,15 @@ public class CenterPanelController implements Initializable, Rooted {
             session.undoHistory.push(new MoveNodesAction(visualizerFacade, Arrays.asList(event.nodes), event.offset).asApplied());
         });
 
+        // Fire manual step when node is clicked during runtime
+        visualizerFacade.addEventHandler(VisualizerEvent.MOUSE_NODE_CLICKED, (event) -> {
+            if (session.mode().get().equals(Mode.RUN))
+                session.net.getElementById(event.getClickedNodeId()).ifPresent(netElement -> {
+                    if (netElement instanceof Transition transition)
+                        simulatorFacade.singleManualStep(transition);
+                });
+        });
+
         centerToolbarLeft.getChildren().add(layoutButton);
         layoutButton.setOnAction(actionEvent -> {
             CompletableFuture.delayedExecutor(500, TimeUnit.MILLISECONDS).execute(() -> {
@@ -204,15 +265,15 @@ public class CenterPanelController implements Initializable, Rooted {
         toggleModeButton.setOnAction(event -> {
             // toggle mode
             session.mode().set(session.mode().getValue() == Mode.RUN ? Mode.EDIT : Mode.RUN);
-            
+
             // deselect all tools
             if (addingGroup.getSelectedToggle() != null) {
                 addingGroup.getSelectedToggle().setSelected(false);
             }
-            
+
 //             clean up arc adding filters
             inputNode[0] = null;
-            
+
 //             visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_CLICKED, clickedEventEventHandler);
 //             visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
 //             visualizerFacade.removeEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);
@@ -223,7 +284,7 @@ public class CenterPanelController implements Initializable, Rooted {
 
         progressCircle.setProgress(0);
 
-        centerToolbarLeft.getChildren().addAll(toggleModeButton);
+        centerToolbarLeft.getChildren().addAll(toggleModeButton, netGroupChoiceBox, netTypesChoiceBox);
         centerToolbarRight.getChildren().addAll(speedSlider, progressCircle, stepButton, playPauseButton, stopButton, addArcButton, addPlaceButton, addTransitionButton);
 
         simulatorFacade.setProgressCallback(value -> Platform.runLater(() -> progressCircle.setProgress(value)));
@@ -260,7 +321,7 @@ public class CenterPanelController implements Initializable, Rooted {
                 this.mouseEventEventHandler = mouseEvent -> {
                     final var place = new Place(net);
                     getSession().undoHistory.push(
-                        new AddNodeAction(net, place, visualizerFacade.mousePositionToGraphPosition(mouseEvent)).andApply()
+                            new AddNodeAction(net, place, visualizerFacade.mousePositionToGraphPosition(mouseEvent)).andApply()
                     );
                 };
                 graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
@@ -279,7 +340,7 @@ public class CenterPanelController implements Initializable, Rooted {
                 this.mouseEventEventHandler = mouseEvent -> {
                     final var transition = new Transition(net);
                     getSession().undoHistory.push(
-                        new AddNodeAction(net, transition, visualizerFacade.mousePositionToGraphPosition(mouseEvent)).andApply()
+                            new AddNodeAction(net, transition, visualizerFacade.mousePositionToGraphPosition(mouseEvent)).andApply()
                     );
                 };
                 graphPane.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventEventHandler);
@@ -333,7 +394,7 @@ public class CenterPanelController implements Initializable, Rooted {
                     }
 
                 };
-                
+
                 // attach event filters
                 visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OVER, nodeOverEventEventHandler);
                 visualizerFacade.addEventFilter(VisualizerEvent.MOUSE_NODE_OUT, nodeOutEventEventHandler);

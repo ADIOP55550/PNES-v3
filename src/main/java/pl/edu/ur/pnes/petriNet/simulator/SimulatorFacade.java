@@ -242,11 +242,17 @@ public class SimulatorFacade {
     }
 
     public void singleManualStep(Transition transitionToBeActivated) {
+
+        // If it is not paused nor stopped, then do nothing
+        if (!getAutoStepState().equals(AutoStepState.PAUSED) && !getAutoStepState().equals(AutoStepState.STOPPED))
+            return;
+
         logger.info("manual step fired on transition {}", transitionToBeActivated.getName());
         try {
             simulator.fireTransition(transitionToBeActivated);
+            setAutoStepState(AutoStepState.PAUSED);
         } catch (TransitionCannotBeActivatedException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
         simulator.calculateTransitionsThatCanBeActivated();
     }

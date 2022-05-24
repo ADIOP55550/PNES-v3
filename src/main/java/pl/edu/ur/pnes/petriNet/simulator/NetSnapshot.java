@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class NetSnapshot {
     private Integer netHashCode = null;
-    private final Map<String, Double> tokens = new HashMap<>();
+    private final Map<String, Object> tokens = new HashMap<>();
 
     private static final Logger logger = LogManager.getLogger(NetSnapshot.class);
 
@@ -34,6 +34,7 @@ public class NetSnapshot {
     /**
      * Restores this snapshot to the given net.
      * If the hash of given net is not equal to when the snapshot was created, throws.
+     *
      * @param net Where to restore the snapshot to.
      * @throws IllegalStateException if Net hash changed or any Node cannot be found
      */
