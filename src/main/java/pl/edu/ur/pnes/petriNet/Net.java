@@ -1,5 +1,7 @@
 package pl.edu.ur.pnes.petriNet;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 import javafx.event.EventDispatchChain;
 import javafx.event.EventHandler;
@@ -8,20 +10,15 @@ import javafx.geometry.Point3D;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import pl.edu.ur.pnes.petriNet.events.NetElementAddedEvent;
-import pl.edu.ur.pnes.petriNet.events.NetElementRemovedEvent;
-import pl.edu.ur.pnes.petriNet.events.NetEvent;
-import pl.edu.ur.pnes.petriNet.events.NetEventsHandler;
+import pl.edu.ur.pnes.petriNet.events.*;
+import pl.edu.ur.pnes.petriNet.netTypes.NetType;
+import pl.edu.ur.pnes.petriNet.netTypes.annotations.UsedInNetType;
 import pl.edu.ur.pnes.petriNet.simulator.Rules;
-import pl.edu.ur.pnes.petriNet.simulator.SimulatorFacade;
-import pl.edu.ur.pnes.petriNet.visualizer.VisualizerFacade;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 public abstract class Net {
-    SimulatorFacade netSimulator;
-    VisualizerFacade netVisualizer;
     private static final Logger logger = LogManager.getLogger(Net.class);
 
     int lastId = 0;
@@ -45,6 +42,72 @@ public abstract class Net {
         internalEventsHandler.addEventFilter(NetEvent.ANY, event -> {
             logger.debug("NET EVENT: {}", event.getEventType().getName());
         });
+    }
+
+    /*
+    so called S1/S2 rule
+        S1 - keeps input values
+        S2 - removes input values (set 0)
+     */
+    @UsedInNetType(NetType.FPN)
+    private Boolean removeInputsOnTransitionFire = true;
+
+    /**
+     * Whether to remove input values on transition firing
+     *
+     * @return Whether to remove input values on transition firing
+     * @see #removeInputsOnTransitionFire
+     */
+    public Boolean getRemoveInputsOnTransitionFire() {
+        return removeInputsOnTransitionFire;
+    }
+
+    /**
+     * Sets whether to remove input values on transition firing
+     *
+     * @param removeInputsOnTransitionFire Whether to remove input values on transition firing
+     * @see #removeInputsOnTransitionFire
+     */
+    public void setRemoveInputsOnTransitionFire(Boolean removeInputsOnTransitionFire) {
+        this.removeInputsOnTransitionFire = removeInputsOnTransitionFire;
+    }
+
+    /**
+     * Current NetType, fires {@link NetTypeChangedEvent} on change
+     */
+    private final ObjectProperty<NetType> netType = new SimpleObjectProperty<>(NetType.PN) {
+        @Override
+        public void set(NetType newValue) {
+            super.set(newValue);
+            fireEvent(new NetTypeChangedEvent(newValue, newValue.netGroup));
+        }
+    };
+
+    /**
+     * Get current net type
+     *
+     * @return current net type
+     */
+    public NetType getNetType() {
+        return netType.get();
+    }
+
+    /**
+     * Net type property
+     *
+     * @return property containing current net type
+     */
+    public ObjectProperty<NetType> netTypeProperty() {
+        return netType;
+    }
+
+    /**
+     * Set new net type and fire {@link NetTypeChangedEvent}
+     *
+     * @param netType new NetType
+     */
+    public void setNetType(NetType netType) {
+        this.netType.set(netType);
     }
 
     public List<Arc> getArcs() {
@@ -154,9 +217,22 @@ public abstract class Net {
     }
 
 
+    /**
+     * Find all transitions that can be activated in the next step
+     *
+     * @return Stream of transitions that can be activated in the next step
+     */
     public Stream<Transition> getTransitionsThatCanBeActivated() {
-        return getTransitions().stream()
-                .filter(t -> activationRule.test(t));
+        return switch (getNetType()) {
+            case PN -> getTransitions().stream()
+                    .filter(t -> activationRule.test(t));
+
+            case FPN -> getTransitions().stream()
+                    .filter(t -> t.getFuzzyInputValue() >= t.inputTreshold);
+
+            //noinspection UnnecessaryDefault
+            default -> throw new IllegalStateException("Unhandled net type");
+        };
     }
 
     public Optional<NetElement> getElementById(String id) {
@@ -205,6 +281,6 @@ public abstract class Net {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(lastId, getArcs().size(), getPlaces().size(), getTransitions().size());
+        return Objects.hash(lastId, getArcs().size(), getPlaces().size(), getTransitions().size(), getNetType());
     }
 }

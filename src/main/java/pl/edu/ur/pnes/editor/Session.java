@@ -85,7 +85,7 @@ public class Session {
             fileProperty().addListener(observable -> binding.invalidate());
             modifiedProperty().addListener(observable -> binding.invalidate());
             return new SimpleStringProperty() {{
-               bind(binding);
+                bind(binding);
             }};
         }
         return name;
@@ -94,7 +94,7 @@ public class Session {
     ////////////////////////////////////////////////////////////////////////////////
 
     public Session() {
-        this.net = new PetriNet();
+        this(new PetriNet());
     }
 
     public Session(PetriNet net) {

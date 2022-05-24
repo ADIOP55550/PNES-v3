@@ -12,6 +12,8 @@ public abstract class NetEvent extends Event {
 
     public static EventType<NodesMovedEvent> NODES_MOVED = new EventType<>(ANY, "NET_ANY");
 
+    public static EventType<NetTypeChangedEvent> TYPE_CHANGED = new EventType<>(ANY, "NET_TYPE_CHANGED");
+
 
     public NetEvent(EventType<? extends NetEvent> eventType) {
         super(eventType);

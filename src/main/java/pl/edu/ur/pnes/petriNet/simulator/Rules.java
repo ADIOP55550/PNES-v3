@@ -8,7 +8,7 @@ import java.util.function.Predicate;
 public enum Rules {
     R1(transition ->
             transition.inputs.entrySet().stream().allMatch(
-                    placeArcEntry -> placeArcEntry.getKey().getTokens() >= placeArcEntry.getValue().getWeight()
+                    placeArcEntry -> placeArcEntry.getKey().getTokensAs(Integer.class) >= placeArcEntry.getValue().getWeight()
             )
     ),
     R2(transition -> {
