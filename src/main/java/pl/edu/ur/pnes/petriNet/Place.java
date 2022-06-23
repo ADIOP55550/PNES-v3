@@ -8,6 +8,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import pl.edu.ur.pnes.petriNet.events.NetEvent;
 import pl.edu.ur.pnes.petriNet.events.NetTypeChangedEvent;
+import pl.edu.ur.pnes.petriNet.netTypes.NetType;
+import pl.edu.ur.pnes.petriNet.netTypes.annotations.EditableInGUI;
+import pl.edu.ur.pnes.petriNet.netTypes.annotations.GetterFor;
+import pl.edu.ur.pnes.petriNet.netTypes.annotations.SetterFor;
+import pl.edu.ur.pnes.petriNet.netTypes.annotations.TypeInNetType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +20,9 @@ import java.util.Objects;
 
 public class Place extends Node {
     private static int placeCounter = 0;
+    @EditableInGUI(useGetter = true, useSetter = true)
+    @TypeInNetType(type = Double.class, netType = NetType.FPN)
+    @TypeInNetType(type = Integer.class, netType = NetType.PN)
     private final ObjectProperty<Object> tokens = new SimpleObjectProperty<>(0);
     private final DoubleProperty capacity = new SimpleDoubleProperty(Double.MAX_VALUE);
 
@@ -88,6 +96,7 @@ public class Place extends Node {
      *
      * @return uncast tokens value
      */
+    @GetterFor("tokens")
     public Object getTokens() {
         return this.tokens.get();
     }
@@ -122,6 +131,7 @@ public class Place extends Node {
      *
      * @param value raw new value for tokens
      */
+    @SetterFor("tokens")
     public void setTokens(Object value) {
         this.tokens.set(value);
     }
