@@ -11,10 +11,10 @@ import java.lang.annotation.*;
  * Has LOWER priority than {@link UsedInNetType}
  * Has LOWER priority than {@link NotInNetType}
  */
-@AnnotationsPriority(1)
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.CONSTRUCTOR})
-@Repeatable(NotInNetGropus.class)
+@Repeatable(NotInNetGroups.class)
 public @interface NotInNetGroup {
-    NetGroup[] value();
+    NetGroup value();
 }

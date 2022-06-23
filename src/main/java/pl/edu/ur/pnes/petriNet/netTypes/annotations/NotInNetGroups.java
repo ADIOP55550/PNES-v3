@@ -5,8 +5,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@AnnotationsPriority(1)
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface NotInNetGropus {
+public @interface NotInNetGroups {
     NotInNetGroup[] value();
 }
