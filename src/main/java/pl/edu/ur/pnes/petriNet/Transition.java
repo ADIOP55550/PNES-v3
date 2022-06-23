@@ -10,6 +10,7 @@ import pl.edu.ur.pnes.petriNet.netTypes.nonClassical.FPN.Aggregation;
 import pl.edu.ur.pnes.petriNet.netTypes.nonClassical.FPN.SNorm;
 import pl.edu.ur.pnes.petriNet.netTypes.nonClassical.FPN.TNorm;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -59,19 +60,28 @@ public class Transition extends Node {
     }
 
     /**
-     * Get input value based on input places aggregeted using {@link #inputAggregation}
+     * Get input value based on input places aggregated using {@link #inputAggregation}
      *
      * @return calculated input value
      */
     @UsedInNetType(NetType.FPN)
     public double getFuzzyInputValue() {
         // get correct identity
-        var identityElement = this.inputAggregation.getClass().isAssignableFrom(SNorm.class) ? SNorm.IDENTITY_ELEMENT : TNorm.IDENTITY_ELEMENT;
+        System.out.println("(this.inputAggregation instanceof SNorm) = " + (this.inputAggregation instanceof SNorm));
+        System.out.println("this.inputAggregation.getClass().getSimpleName() = " + this.inputAggregation.getClass().getSimpleName());
+        var identityElement = this.inputAggregation instanceof SNorm ? SNorm.IDENTITY_ELEMENT : TNorm.IDENTITY_ELEMENT;
+        System.out.println("identityElement = " + identityElement);
+        System.out.println("Aggregating:");
+        System.out.println("inputs place|arc for " + this.getName() + "= " + Arrays.toString(inputs.entrySet().stream().map(v -> v.getKey().getTokensAs(Double.class) + "|" + v.getValue().getWeight()).toArray()));
         // aggregate with Transition aggregation
-        return this.inputs
+        final double value = this.inputs
                 .entrySet().stream()
                 .mapToDouble(placeArcEntry -> placeArcEntry.getKey().getTokensAs(Double.class) * placeArcEntry.getValue().getWeight()) // get all weights and multiply by arc weights
                 .reduce(identityElement, this.inputAggregation);
+        System.out.println("Fuzzy Input Value = " + value);
+        return value;
+
+
     }
 
     /**
@@ -82,7 +92,12 @@ public class Transition extends Node {
     @UsedInNetType(NetType.FPN)
     public double getFuzzyOutputValue() {
         var inputValue = this.getFuzzyInputValue();
-        return this.internalTNorm.applyAsDouble(inputValue, this.beta);
+        System.out.println("Transition.getFuzzyOutputValue");
+        System.out.println("inputValue = " + inputValue);
+        System.out.println("this.beta = " + this.beta);
+        final double v = this.internalTNorm.applyAsDouble(inputValue, this.beta);
+        System.out.println("Fuzzy Output Value = " + v);
+        return v;
     }
 
 
@@ -100,7 +115,7 @@ public class Transition extends Node {
      * @see #inputs
      */
     @UsedInNetType(NetType.FPN)
-    public Aggregation inputAggregation = SNorm.MIN_S_NORM;
+    public Aggregation inputAggregation = SNorm.MAX_S_NORM;
 
     /**
      * T-Norm used to calculate output value of this transition
@@ -108,7 +123,7 @@ public class Transition extends Node {
      * @see #getFuzzyOutputValue()
      */
     @UsedInNetType(NetType.FPN)
-    public TNorm internalTNorm = TNorm.MAX_T_NORM;
+    public TNorm internalTNorm = TNorm.MIN_T_NORM;
 
     /**
      * S-Norm used to store new value in this transition output places
@@ -117,7 +132,7 @@ public class Transition extends Node {
      * @see #outputs
      */
     @UsedInNetType(NetType.FPN)
-    public SNorm outputSNorm = SNorm.MIN_S_NORM;
+    public SNorm outputSNorm = SNorm.MAX_S_NORM;
 
     /**
      * Threshold which determines if this transition can be fired

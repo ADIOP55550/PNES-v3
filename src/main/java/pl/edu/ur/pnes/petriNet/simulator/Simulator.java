@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pl.edu.ur.pnes.petriNet.Net;
 import pl.edu.ur.pnes.petriNet.Transition;
+import pl.edu.ur.pnes.petriNet.netTypes.NetType;
 
 import java.util.Objects;
 import java.util.Random;
@@ -43,10 +44,20 @@ class Simulator {
             lastActivatedTransitions = null;
         }
 
-        if (!net.activationRule.test(transition)) {
+        if (!net.getCanActivateTester().test(transition)) {
             logger.error("Transition " + transition.getName() + " could not be activated!");
             throw new TransitionCannotBeActivatedException("This transition cannot be activated");
         }
+
+
+        if (net.getNetType() == NetType.FPN) {
+            System.out.println("transition.inputAggregation: " + transition.inputAggregation.getClass().getSimpleName());
+            System.out.println("transition.outputSNorm: " + transition.outputSNorm.getClass().getSimpleName());
+            System.out.println("transition.internalTNorm: " + transition.internalTNorm.getClass().getSimpleName());
+        }
+
+
+        final double transitionFuzzyOutputValue = transition.getFuzzyOutputValue();
 
         transition.inputs.forEach((place, arc) -> {
             logger.debug("changing input Place " + place.getName());
@@ -55,8 +66,10 @@ class Simulator {
                     place.setTokensAs(Integer.class, transition.getSubtractor().applyAsInt(place.getTokensAs(Integer.class), (int) arc.getWeight()));
                 }
                 case FPN -> {
-                    if (net.getRemoveInputsOnTransitionFire())
+                    if (net.getRemoveInputsOnTransitionFire()) {
+                        logger.debug("Setting " + place.getName() + " to 0");
                         place.setTokensAs(Double.class, 0d);
+                    }
                 }
             }
         });
@@ -68,10 +81,13 @@ class Simulator {
                     place.setTokensAs(Integer.class, transition.getAdder().applyAsInt(place.getTokensAs(Integer.class), (int) arc.getWeight()));
                 }
                 case FPN -> {
-                    place.setTokensAs(Double.class, transition.outputSNorm.applyAsDouble(transition.getFuzzyOutputValue() * arc.getWeight(), place.getTokensAs(Double.class)));
+                    final double value = transition.outputSNorm.applyAsDouble(transitionFuzzyOutputValue * arc.getWeight(), place.getTokensAs(Double.class));
+                    logger.debug("Setting " + place.getName() + " to " + value);
+                    place.setTokensAs(Double.class, value);
                 }
             }
         });
+
 
         lastActivatedTransitions = transition;
         transition.lastActivated.set(true);

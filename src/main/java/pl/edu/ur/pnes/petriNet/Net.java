@@ -16,6 +16,7 @@ import pl.edu.ur.pnes.petriNet.netTypes.annotations.UsedInNetType;
 import pl.edu.ur.pnes.petriNet.simulator.Rules;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public abstract class Net {
@@ -223,17 +224,20 @@ public abstract class Net {
      * @return Stream of transitions that can be activated in the next step
      */
     public Stream<Transition> getTransitionsThatCanBeActivated() {
-        return switch (getNetType()) {
-            case PN -> getTransitions().stream()
-                    .filter(t -> activationRule.test(t));
+        System.out.println("Get transitions that can be activated");
+        return getTransitions().stream()
+                .filter(getCanActivateTester());
+    }
 
-            case FPN -> getTransitions().stream()
-                    .filter(t ->
-                            // there is at least one input with tokens > 0
-                            t.inputs.entrySet().stream().anyMatch(placeArcEntry -> placeArcEntry.getKey().getTokensAs(Double.class) > 0.000001)
-                                    // and input condition is satisfied
-                                    && t.getFuzzyInputValue() >= t.inputTreshold
-                    );
+    public Predicate<Transition> getCanActivateTester() {
+        return switch (getNetType()) {
+            case PN -> t -> activationRule.test(t);
+            case FPN -> t ->
+                    // there is at least one input with tokens > 0
+                    t.inputs.entrySet().stream().anyMatch(placeArcEntry -> placeArcEntry.getKey().getTokensAs(Double.class) > 0.000001)
+                            // and input condition is satisfied
+                            && t.getFuzzyInputValue() >= t.inputTreshold
+            ;
 
             //noinspection UnnecessaryDefault
             default -> throw new IllegalStateException("Unhandled net type");

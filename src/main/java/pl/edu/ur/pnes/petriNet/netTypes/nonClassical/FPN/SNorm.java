@@ -12,5 +12,5 @@ public abstract class SNorm extends Aggregation {
      */
     public static final double IDENTITY_ELEMENT = 0;
 
-    public static final SNorm MIN_S_NORM = new MinSNorm();
+    public static final SNorm MAX_S_NORM = new MaxSNorm();
 }
