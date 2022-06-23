@@ -12,5 +12,5 @@ public abstract class TNorm extends Aggregation {
      */
     public static final double IDENTITY_ELEMENT = 1;
 
-    public static final TNorm MAX_T_NORM = new MaxTNorm();
+    public static final TNorm MIN_T_NORM = new MinTNorm();
 }

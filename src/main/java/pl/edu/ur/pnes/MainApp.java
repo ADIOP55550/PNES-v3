@@ -45,25 +45,25 @@ public class MainApp extends Application {
         // Initial for testing
         final var net = new PetriNet();
         {
-            net.setNetType(NetType.PN);
+            net.setNetType(NetType.FPN);
             final Place place1 = new Place(net);
             final Place place2 = new Place(net);
             final Place place3 = new Place(net);
             final Place place4 = new Place(net);
 //            place1.setTokensAs(Double.class, 2d);
-            place1.setTokensAs(Integer.class, 2);
+            place1.setTokensAs(Double.class, 0.4);
             final Transition transition1 = new Transition(net);
             final Transition transition2 = new Transition(net);
             final Transition transition3 = new Transition(net);
 //            place3.setTokensAs(Double.class, 1d);
-            place3.setTokensAs(Integer.class, 1);
+            place3.setTokensAs(Double.class, 0.4);
             final Arc arc1 = new Arc(net, place1, transition1);
             final Arc arc2 = new Arc(net, transition1, place2);
             final Arc arc3 = new Arc(net, place2, transition2);
             final Arc arc4 = new Arc(net, transition2, place1);
-            arc4.setWeight(2);
+//            arc4.setWeight(2);
             final Arc arc5 = new Arc(net, transition2, place3);
-            arc5.setWeight(2);
+//            arc5.setWeight(2);
             final Arc arc6 = new Arc(net, place2, transition3);
             final Arc arc7 = new Arc(net, transition3, place4);
             final Arc arc8 = new Arc(net, place3, transition2);
