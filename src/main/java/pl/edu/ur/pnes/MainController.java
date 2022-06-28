@@ -142,8 +142,6 @@ public class MainController implements Initializable {
             final Object data = newValue.getUserData();
             if (data instanceof Session session)
                 focusedSession.set(session);
-            else
-                focusedSession.set(null);
         });
 
         final Function<Boolean, TabStageFactory> detachableStageFactoryFactory = (preventClosing) -> (detachableTabPane, tab) -> {
@@ -185,7 +183,9 @@ public class MainController implements Initializable {
 
         // initialize common panels
         projectTreePanelController = ProjectTreePanelController.prepare();
-        propertiesPanelController = PropertiesPanelController.prepare();
+//        propertiesPanelController = PropertiesPanelController.prepare();
+        propertiesPanelController = PropertiesPanelController.prepare(this);
+
         leftTabPane.addTab("Project tree", projectTreePanelController.getRoot());
         rightTabPane.addTab("Properties", propertiesPanelController.getRoot());
 

@@ -144,7 +144,9 @@ public class Session {
     public void setCenterPanelController(CenterPanelController centerPanelController) {
 
         this.centerPanelController = centerPanelController;
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         System.out.println(centerPanelController);
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
     ////////////////////////////////////////////////////////////////////////////////
 }

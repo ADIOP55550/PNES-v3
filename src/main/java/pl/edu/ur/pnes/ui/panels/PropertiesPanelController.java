@@ -7,6 +7,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import pl.edu.ur.pnes.MainApp;
+import pl.edu.ur.pnes.MainController;
 import pl.edu.ur.pnes.petriNet.NetElement;
 import pl.edu.ur.pnes.petriNet.netTypes.NetGroup;
 import pl.edu.ur.pnes.petriNet.netTypes.NetType;
@@ -25,6 +26,18 @@ import java.util.stream.Collectors;
 public class PropertiesPanelController implements Rooted, Initializable {
     @FXML
     VBox root;
+
+    public PropertiesPanelController(MainController parent) {
+        parent.focusedSessionProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("PropertiesPanelController.initialize");
+            if (newValue == null) return;
+            VisualizerFacade visualizerFacade = newValue.getCenterPanelController().visualizerFacade;
+            visualizerFacade.addEventHandler(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
+                var element = visualizerFacade.getElementById(event.getClickedNodeId()).orElseThrow();
+                onSelectedElementsChange(List.of(element), newValue.net.getNetType());
+            });
+        });
+    }
 
     @Override
     public javafx.scene.Node getRoot() {
@@ -179,9 +192,10 @@ public class PropertiesPanelController implements Rooted, Initializable {
     /**
      * Loads new instance of the panel.
      */
-    static public PropertiesPanelController prepare() {
+    static public PropertiesPanelController prepare(MainController parent) {
+
         final var loader = FXMLUtils.getLoader(PropertiesPanelController.class);
-        final var controller = new PropertiesPanelController();
+        final var controller = new PropertiesPanelController(parent);
         try {
             loader.setController(controller);
             loader.load();
@@ -193,13 +207,5 @@ public class PropertiesPanelController implements Rooted, Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        MainApp.mainController.focusedSessionProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("PropertiesPanelController.initialize");
-            VisualizerFacade visualizerFacade = newValue.getCenterPanelController().visualizerFacade;
-            visualizerFacade.addEventHandler(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
-                var element = visualizerFacade.getElementById(event.getClickedNodeId()).orElseThrow();
-                onSelectedElementsChange(List.of(element), newValue.net.getNetType());
-            });
-        });
     }
 }
