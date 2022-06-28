@@ -73,6 +73,7 @@ public class MainApp extends Application {
             net.getAllNodesStream().forEach(n -> n.setPosition(new Point3D(r.nextDouble(-5, 5), r.nextDouble(-5, 5), 0)));
         }
         mainController.open(new Session(net));
+
     }
 
     public static void main(String[] args) {

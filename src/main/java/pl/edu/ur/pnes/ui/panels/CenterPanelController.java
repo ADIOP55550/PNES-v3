@@ -78,8 +78,8 @@ public class CenterPanelController implements Initializable, Rooted {
     @FXML
     public ProgressIndicator progressCircle = new ProgressIndicator();
 
-    private VisualizerFacade visualizerFacade;
-    private SimulatorFacade simulatorFacade;
+    VisualizerFacade visualizerFacade;
+    SimulatorFacade simulatorFacade;
 
     private final Button stepButton = new Button("Step ⏩");
     private final Button stopButton = new Button("Stop ⏹");
@@ -167,7 +167,9 @@ public class CenterPanelController implements Initializable, Rooted {
 
     protected CenterPanelController(final Session session) {
         this.session = session;
+        session.setCenterPanelController(this);
     }
+
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -244,6 +246,7 @@ public class CenterPanelController implements Initializable, Rooted {
         this.visualizerFacade = new VisualizerFactory().create(graphPane, "/css/petri-net-graph.css", session);
         this.simulatorFacade = SimulatorFactory.create(session);
         visualizerFacade.visualizeNet(net);
+
 
         net.addEventHandler(NetEvent.NODES_MOVED, event -> {
             session.undoHistory.push(new MoveNodesAction(visualizerFacade, Arrays.asList(event.nodes), event.offset).asApplied());
