@@ -52,6 +52,7 @@ public class MainApp extends Application {
             final Place place4 = new Place(net);
 //            place1.setTokensAs(Double.class, 2d);
             place1.setTokensAs(Double.class, 0.4);
+            place1.setCapacity(2);
             final Transition transition1 = new Transition(net);
             final Transition transition2 = new Transition(net);
             final Transition transition3 = new Transition(net);

@@ -3,10 +3,9 @@ package pl.edu.ur.pnes.ui.panels;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Control;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,14 +29,11 @@ import java.util.stream.Collectors;
 
 public class PropertiesPanelController implements Rooted, Initializable {
     @FXML
-    VBox root;
-
-    @FXML
     VBox controlsWrapper;
-
 
     public PropertiesPanelController(MainController parent) {
         parent.focusedSessionProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("PropertiesPanelController.initialize");
             if (newValue == null) return;
             VisualizerFacade visualizerFacade = newValue.getCenterPanelController().visualizerFacade;
             visualizerFacade.addEventHandler(VisualizerEvent.MOUSE_NODE_CLICKED, event -> {
@@ -138,9 +134,13 @@ public class PropertiesPanelController implements Rooted, Initializable {
                 enableFields) {
             var control = createUIControl(currentNetType, field, netElementsToSet);
 
-            // TODO: add label and control to wrapper (e.g. HBox) and add it to children of controlsWrapper instead of control
+            HBox hBox = new HBox();
+            hBox.setSpacing(10);
+            hBox.setAlignment(Pos.TOP_LEFT);
+            hBox.getChildren().add(new Label(field.getName()));
+            hBox.getChildren().add(control);
 
-            controlsWrapper.getChildren().add(control);
+            controlsWrapper.getChildren().add(hBox);
         }
     }
 

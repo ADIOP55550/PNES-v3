@@ -24,7 +24,11 @@ public class Place extends Node {
     @TypeInNetType(type = Double.class, netType = NetType.FPN)
     @TypeInNetType(type = Integer.class, netType = NetType.PN)
     private final ObjectProperty<Object> tokens = new SimpleObjectProperty<>(0);
-    private final DoubleProperty capacity = new SimpleDoubleProperty(Double.MAX_VALUE);
+
+    @EditableInGUI(useGetter = true, useSetter = true)
+    @TypeInNetType(type = Double.class, netType = NetType.FPN)
+    @TypeInNetType(type = Integer.class, netType = NetType.PN)
+    private final DoubleProperty capacity = new SimpleDoubleProperty(1000);
 
     /**
      * inputs is a HashMap containing all the Place's input connections in form
@@ -184,6 +188,7 @@ public class Place extends Node {
         }
     }
 
+    @GetterFor("capacity")
     public double getCapacity() {
         return capacity.get();
     }
@@ -192,6 +197,7 @@ public class Place extends Node {
         return capacity;
     }
 
+    @SetterFor("capacity")
     public void setCapacity(double capacity) {
         this.capacity.set(capacity);
     }
