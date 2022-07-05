@@ -52,10 +52,11 @@ public class MainController implements Initializable {
             return false;
         }
         sessions.add(session);
-        setFocusedSession(session);
-
 
         final var panel = CenterPanelController.prepare(session);
+
+        setFocusedSession(session);
+
         final var tab = centerTabPane.addTab(session.getName(), panel.getRoot());
         tab.textProperty().bind(session.nameProperty());
         tab.setUserData(session);
