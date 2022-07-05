@@ -1,0 +1,82 @@
+package pl.edu.ur.pnes.parser;
+
+public enum ParserSupportedElements {
+    ROOT_PNML("pnml"),
+    XMLNS("xmlns"),
+    NET("net"),
+    TYPE("type"),
+    NAME("name"),
+    TOOLSPECIFIC("toolspecific"),
+    TOOL("tool"),
+    VERSION("version"),
+//    KEYBOARD_MOVING_SPEED("movingSpeed"),
+    GRID_SIZE("gridSize"),
+//    SIMULATION_DELAY("simulationDelay"),
+    PETRI_CLASS("class"),
+    SIMULATION_STRATEGY("strategy"),
+    DEFAULT_PLACE_DIAMETER("defaultPlaceDiameter"),
+    DEFAULT_TRANSITION_WIDTH("defaultTransitionWidth"),
+    DEFAULT_TRANSITION_HEIGHT("defaultTransitionHeight"),
+    DEFAULT_ARC_ARROW_SIZE("defaultArcArrowSize"),
+    NOTES("notes"),
+    NOTE("note"),
+    FONT("font"),
+//    FONT_SIZE("fontSize"),
+    PAGE("page"),
+//    WORKSPACE_OPTIONS("workspaceOpts"),
+    PLACE("place"),
+    GRAPHICS("graphics"),
+    POSITION("position"),
+    DIMENSION("dimension"),
+    ATTRIBUTES("attributes"),
+    TRANSITION("transition"),
+    CAPACITY("capacity"),
+    INITIAL_MARKING("initialMarking"),
+    TEXT("text"),
+    ARC("arc"),
+    X("x"),
+    Y("y"),
+    ID("id"),
+    SOURCE("source"),
+    WEIGHT("weight"),
+    INHIBITOR("inhibitor"),
+//    ATTR_AUTOMATIC_CALC("isAttrsAutCalc"),
+//    START_AUTOMATIC_CALC("isStartAutCalc"),
+//    END_AUTOMATIC_CALC("isEndAutCalc"),
+//    SIZE("size"),
+//    LINE("line"),
+    WIDTH("width"),
+    TARGET("target"),
+    PRIORITY("priority"),
+    TRESHOLD("treshold"),
+    TRUTH_DEGREE("truthDegree"),
+//    INPUT_OP("opIn"),
+//    VINPUT_OP("VopIn"),
+//    OPTIMIZATION_INPUT_OP("optOpIn"),
+//    STRATEGY_OPTIMIZATION_INPUT_OP("strategyOptOpIn"),
+//    TYPE_INPUT_OP("typeOpIn"),
+//    OUTPUT_OP_1("opOut1"),
+//    VOUTPUT_OP_1("VopOut1"),
+//    OPTIMIZATION_OUTPUT_OP_1("optOpOut1"),
+//    STRATEGY_OPTIMIZATION_OUTPUT_OP_1("strategyOptOpOut1"),
+//    TYPE_OUTPUT_OP_1("typeOpOut1"),
+//    OUTPUT_OP_2("opOut2"),
+//    VOUTPUT_OP_2("VopOut2"),
+//    OPTIMIZATION_OUTPUT_OP_2("optOpOut2"),
+//    STRATEGY_OPTIMIZATION_OUTPUT_OP_2("strategyOptOpOut2"),
+//    TYPE_OUTPUT_OP_2("typeOpOut2"),
+//    INTERVAL_ORDER("order"),
+    PRECISION("precision"),
+//    ANGLE("angle"),
+    INTERPRETATION("interpretation");
+
+    private  ParserSupportedElements(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
+
+    private final String value;
+}

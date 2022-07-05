@@ -3,7 +3,9 @@ package pl.edu.ur.pnes.editor;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.*;
 import javafx.scene.control.Tab;
+import javafx.stage.Window;
 import pl.edu.ur.pnes.editor.history.UndoHistory;
+import pl.edu.ur.pnes.parser.PnmlWriter;
 import pl.edu.ur.pnes.petriNet.Net;
 import pl.edu.ur.pnes.petriNet.PetriNet;
 
@@ -65,6 +67,7 @@ public class Session {
     ////////////////////////////////////////////////////////////////////////////////
 
     private ReadOnlyStringProperty name;
+    private static int unsavedID = 1;
 
     public final String getName() {
         return name == null ? null : name.get();
@@ -79,9 +82,9 @@ public class Session {
                 @Override
                 protected String computeValue() {
                     if (getFile() == null)
-                        return "(new)";
+                        return "unsaved"+unsavedID;
                     else
-                        return getFile().getName() + (isModified() ? "(modified)" : "");
+                        return getFile().getName() + (isModified() ? "(modified)" : ""); //"*" instead modified?
                 }
             };
             fileProperty().addListener(observable -> binding.invalidate());
@@ -97,6 +100,7 @@ public class Session {
 
     public Session() {
         this(new PetriNet());
+        unsavedID++;
     }
 
     public Session(PetriNet net) {
@@ -107,10 +111,18 @@ public class Session {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    public void save() {
-        if (file == null) {
-            throw new IllegalStateException("Unnamed session needs to be 'saved as'.");
+    public void save(Window scene) { //temp TODO
+        PnmlWriter pnmlWriter = new PnmlWriter();
+        pnmlWriter.generatePnmlFromNet((PetriNet) net);
+        if(fileProperty().get() == null){ //unsaved file
+            fileProperty().set(pnmlWriter.saveToNewFile(scene));
+        } else {
+            pnmlWriter.saveExistedFile(fileProperty().get());
         }
+
+//        if (getFile() == null) {
+//            throw new IllegalStateException("Unnamed session needs to be 'saved as'.");
+//        }
         // TODO: saving
     }
 

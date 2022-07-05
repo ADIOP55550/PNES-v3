@@ -72,7 +72,9 @@ public class MainApp extends Application {
             Random r = new Random();
             net.getAllNodesStream().forEach(n -> n.setPosition(new Point3D(r.nextDouble(-5, 5), r.nextDouble(-5, 5), 0)));
         }
-        mainController.open(new Session(net));
+        Session testNetSession = new Session(net);
+        mainController.open(testNetSession);
+        mainController.setFocusedSession(testNetSession); //focus test net for history service
     }
 
     public static void main(String[] args) {

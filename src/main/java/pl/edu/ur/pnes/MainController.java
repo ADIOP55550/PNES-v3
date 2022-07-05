@@ -12,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.JMetroStyleClass;
@@ -19,12 +20,14 @@ import jfxtras.styles.jmetro.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pl.edu.ur.pnes.editor.Session;
+import pl.edu.ur.pnes.parser.PnmlParser;
 import pl.edu.ur.pnes.ui.controls.Icon;
 import pl.edu.ur.pnes.ui.panels.CenterPanelController;
 import pl.edu.ur.pnes.ui.panels.ProjectTreePanelController;
 import pl.edu.ur.pnes.ui.panels.PropertiesPanelController;
 import pl.edu.ur.pnes.utils.SoundAlertUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -33,6 +36,7 @@ import java.util.Collection;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
+import static pl.edu.ur.pnes.MainApp.mainController;
 import static pl.edu.ur.pnes.MainApp.mainJMetro;
 
 public class MainController implements Initializable {
@@ -132,6 +136,14 @@ public class MainController implements Initializable {
     public MenuItem menuUndo;
     @FXML
     public MenuItem menuRedo;
+    @FXML
+    public MenuItem openFile;
+    @FXML
+    public MenuItem saveFile;
+    @FXML
+    public MenuItem saveFileAs;
+    @FXML
+    public MenuItem newFile;
 
 
     @Override
@@ -260,5 +272,31 @@ public class MainController implements Initializable {
         if (!getFocusedSession().undoHistory.redo()) {
             SoundAlertUtils.playWarning();
         }
+    }
+    @FXML
+    public void newFileAction() throws IOException {
+        Session newSession = new Session();
+        this.open(newSession);
+        this.setFocusedSession(newSession);
+    }
+    @FXML
+    public void openFileAction(ActionEvent event) { //temp
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open PetriNet file");
+        fileChooser.setInitialDirectory(
+                new File(System.getProperty("user.home"))
+        );
+        fileChooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("PNML", "*.pnml"),
+            new FileChooser.ExtensionFilter("All files", "*.*")
+        );
+        File file = fileChooser.showOpenDialog(centerTabPane.getScene().getWindow());
+        if (file != null) {
+            PnmlParser.parsePnmlFile(file);
+        }
+    }
+    @FXML
+    public void saveFileAction(){ //temp
+        getFocusedSession().save(centerTabPane.getScene().getWindow());
     }
 }
