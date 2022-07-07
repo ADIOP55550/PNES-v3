@@ -9,6 +9,10 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pl.edu.ur.pnes.petriNet.netTypes.annotations.DefaultType;
+import pl.edu.ur.pnes.petriNet.netTypes.annotations.EditableInGUI;
+import pl.edu.ur.pnes.petriNet.netTypes.annotations.GetterFor;
+import pl.edu.ur.pnes.petriNet.netTypes.annotations.SetterFor;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -19,6 +23,8 @@ public abstract class NetElement {
     public final StringProperty label = new SimpleStringProperty();
     protected final Net net;
     private final String id;
+    @EditableInGUI(useGetter = true, useSetter = true)
+    @DefaultType(String.class)
     private final StringProperty name = new SimpleStringProperty() {
         @Override
         public void set(String newName) {
@@ -77,6 +83,7 @@ public abstract class NetElement {
         return id;
     }
 
+    @GetterFor("name")
     public String getName() {
         return name.get();
     }
@@ -91,6 +98,7 @@ public abstract class NetElement {
      * @param newName New name of the element
      * @throws IllegalArgumentException If given name is already in use
      */
+    @SetterFor("name")
     public void setName(String newName) throws IllegalArgumentException {
         this.name.set(newName);
     }

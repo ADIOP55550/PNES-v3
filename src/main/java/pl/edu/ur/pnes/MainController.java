@@ -56,10 +56,11 @@ public class MainController implements Initializable {
             return false;
         }
         sessions.add(session);
-        setFocusedSession(session);
-
 
         final var panel = CenterPanelController.prepare(session);
+
+        setFocusedSession(session);
+
         final var tab = centerTabPane.addTab(session.getName(), panel.getRoot());
         tab.textProperty().bind(session.nameProperty());
         tab.setUserData(session);
@@ -154,8 +155,6 @@ public class MainController implements Initializable {
             final Object data = newValue.getUserData();
             if (data instanceof Session session)
                 focusedSession.set(session);
-            else
-                focusedSession.set(null);
         });
 
         final Function<Boolean, TabStageFactory> detachableStageFactoryFactory = (preventClosing) -> (detachableTabPane, tab) -> {
@@ -197,7 +196,9 @@ public class MainController implements Initializable {
 
         // initialize common panels
         projectTreePanelController = ProjectTreePanelController.prepare();
-        propertiesPanelController = PropertiesPanelController.prepare();
+//        propertiesPanelController = PropertiesPanelController.prepare();
+        propertiesPanelController = PropertiesPanelController.prepare(this);
+
         leftTabPane.addTab("Project tree", projectTreePanelController.getRoot());
         rightTabPane.addTab("Properties", propertiesPanelController.getRoot());
 

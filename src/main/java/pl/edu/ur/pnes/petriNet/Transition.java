@@ -4,6 +4,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import pl.edu.ur.pnes.petriNet.netTypes.NetGroup;
 import pl.edu.ur.pnes.petriNet.netTypes.NetType;
+import pl.edu.ur.pnes.petriNet.netTypes.annotations.EditableInGUI;
 import pl.edu.ur.pnes.petriNet.netTypes.annotations.UsedInNetGroup;
 import pl.edu.ur.pnes.petriNet.netTypes.annotations.UsedInNetType;
 import pl.edu.ur.pnes.petriNet.netTypes.nonClassical.FPN.Aggregation;
@@ -85,6 +86,13 @@ public class Transition extends Node {
     }
 
     /**
+     * Truth degree (beta) coefficient
+     */
+    @UsedInNetType(NetType.FPN)
+    @EditableInGUI()
+    public Double beta = 1d;
+
+    /**
      * Get output value calculated by using {@link #internalTNorm} on input value and {@link #beta} coefficient
      *
      * @return Calculated output value
@@ -100,12 +108,6 @@ public class Transition extends Node {
         return v;
     }
 
-
-    /**
-     * Truth degree (beta) coefficient
-     */
-    @UsedInNetType(NetType.FPN)
-    public Double beta = 1d;
 
     /**
      * Aggregation used to aggregate all of this transition input values
@@ -140,6 +142,7 @@ public class Transition extends Node {
      * @see Net#getTransitionsThatCanBeActivated()
      */
     @UsedInNetType(NetType.FPN)
+    @EditableInGUI
     public Double inputTreshold = 0d;
 
 

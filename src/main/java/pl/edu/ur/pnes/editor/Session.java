@@ -8,6 +8,7 @@ import pl.edu.ur.pnes.editor.history.UndoHistory;
 import pl.edu.ur.pnes.parser.PnmlWriter;
 import pl.edu.ur.pnes.petriNet.Net;
 import pl.edu.ur.pnes.petriNet.PetriNet;
+import pl.edu.ur.pnes.ui.panels.CenterPanelController;
 
 import java.io.File;
 
@@ -35,6 +36,7 @@ public class Session {
     public File getFile() {
         return file.get();
     }
+
     public void setFile(File file) {
         this.file.set(file);
     }
@@ -53,6 +55,7 @@ public class Session {
     public boolean isModified() {
         return modified.get();
     }
+
     public void setModified(boolean modified) {
         this.modified.set(modified);
     }
@@ -141,4 +144,21 @@ public class Session {
     }
 
     // TODO: load (from static function/factory)
+
+
+    ////////////////////////////////////////////////////////////////////////////////
+    private CenterPanelController centerPanelController;
+
+    public CenterPanelController getCenterPanelController() {
+        return centerPanelController;
+    }
+
+    public void setCenterPanelController(CenterPanelController centerPanelController) {
+
+        this.centerPanelController = centerPanelController;
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.out.println(centerPanelController);
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    }
+    ////////////////////////////////////////////////////////////////////////////////
 }
