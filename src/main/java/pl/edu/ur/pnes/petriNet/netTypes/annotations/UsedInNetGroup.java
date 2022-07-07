@@ -2,10 +2,7 @@ package pl.edu.ur.pnes.petriNet.netTypes.annotations;
 
 import pl.edu.ur.pnes.petriNet.netTypes.NetGroup;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 
 /**
@@ -15,8 +12,11 @@ import java.lang.annotation.Target;
  * Has LOWER priority than {@link UsedInNetType}
  * Has LOWER priority than {@link NotInNetType}
  */
+
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.CONSTRUCTOR})
+@Repeatable(UsedInNetGroups.class)
 public @interface UsedInNetGroup {
-    NetGroup[] value();
+    NetGroup value();
 }

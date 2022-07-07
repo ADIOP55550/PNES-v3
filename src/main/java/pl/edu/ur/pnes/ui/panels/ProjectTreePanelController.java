@@ -6,14 +6,23 @@ import pl.edu.ur.pnes.ui.utils.FXMLUtils;
 import pl.edu.ur.pnes.ui.utils.Rooted;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 public class ProjectTreePanelController implements Rooted {
     @FXML
     AnchorPane root;
+
     @Override
     public javafx.scene.Node getRoot() {
         return root;
     }
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+
+    }
+
 
     /**
      * Loads new instance of the panel.
@@ -33,4 +42,5 @@ public class ProjectTreePanelController implements Rooted {
     protected ProjectTreePanelController() {
 
     }
+
 }
