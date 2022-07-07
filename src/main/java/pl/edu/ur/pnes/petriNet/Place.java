@@ -28,7 +28,7 @@ public class Place extends Node {
     @EditableInGUI(useGetter = true, useSetter = true)
     @TypeInNetType(type = Double.class, netType = NetType.FPN)
     @TypeInNetType(type = Integer.class, netType = NetType.PN)
-    private final DoubleProperty capacity = new SimpleDoubleProperty(1000);
+    private final DoubleProperty capacity = new SimpleDoubleProperty(10000000);
 
     /**
      * inputs is a HashMap containing all the Place's input connections in form

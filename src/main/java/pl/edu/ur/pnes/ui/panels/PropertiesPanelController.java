@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.jetbrains.annotations.NotNull;
@@ -351,6 +352,12 @@ public class PropertiesPanelController implements Rooted, Initializable {
             });
             return doubleSpinner;
         }
+//        else if (usedType != null && usedType.isAssignableFrom(Set.class)) {
+//            ChoiceBox<?> choiceBox = new ChoiceBox<>();
+//
+//            choiceBox.
+//
+//        }
         throw new IllegalStateException("Unknown type for control: " + usedType.getName());
     }
 
